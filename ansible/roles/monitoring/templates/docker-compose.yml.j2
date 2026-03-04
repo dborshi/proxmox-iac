@@ -1,0 +1,64 @@
+---
+services:
+
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:{{ vm_version }}
+    container_name: victoriametrics
+    restart: unless-stopped
+    volumes:
+      - {{ monitoring_data_dir }}/victoriametrics:/storage
+    command:
+      - "-storageDataPath=/storage"
+      - "-retentionPeriod={{ vm_retention }}"
+    ports:
+      - "8428:8428"
+
+  victorialogs:
+    image: victoriametrics/victoria-logs:{{ vl_version }}
+    container_name: victorialogs
+    restart: unless-stopped
+    volumes:
+      - {{ monitoring_data_dir }}/victorialogs:/vlogs-data
+    command:
+      - "-storageDataPath=/vlogs-data"
+      - "-retentionPeriod={{ vl_retention }}"
+    ports:
+      - "9428:9428"
+
+  grafana:
+    image: grafana/grafana:{{ grafana_version }}
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - {{ monitoring_data_dir }}/grafana:/var/lib/grafana
+      - {{ monitoring_dir }}/grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SERVER_ROOT_URL=https://grafana.{{ base_domain }}
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD={{ grafana_admin_password }}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - victoriametrics
+      - victorialogs
+    ports:
+      - "3000:3000"
+
+  blackbox:
+    image: prom/blackbox-exporter:{{ blackbox_version }}
+    container_name: blackbox
+    restart: unless-stopped
+    volumes:
+      - {{ monitoring_dir }}/blackbox/config.yml:/etc/blackbox_exporter/config.yml
+    ports:
+      - "9115:9115"
+
+  gatus:
+    image: ghcr.io/twin/gatus:{{ gatus_version }}
+    container_name: gatus
+    restart: unless-stopped
+    volumes:
+      - {{ monitoring_dir }}/gatus/config.yaml:/config/config.yaml
+    depends_on:
+      - blackbox
+    ports:
+      - "8080:8080"

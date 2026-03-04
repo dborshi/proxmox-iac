@@ -1,0 +1,7 @@
+---
+- name: Configure monitor LXC
+  hosts: monitor
+  become: true
+
+  roles:
+    - monitoring

@@ -1,0 +1,18 @@
+---
+# Versions
+vm_version: "latest"
+vl_version: "latest-victorialogs"
+grafana_version: "latest"
+gatus_version: "latest"
+blackbox_version: "latest"
+
+# Paths
+monitoring_dir: "/opt/monitoring"
+monitoring_data_dir: "/mnt/logs"
+
+# Retention
+vm_retention: "12"
+vl_retention: "30d"
+
+# Domain
+base_domain: "dbnet"
