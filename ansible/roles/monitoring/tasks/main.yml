@@ -1,0 +1,106 @@
+---
+- name: Create keyrings directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Add Docker GPG key
+  get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+
+- name: Add Docker repository
+  shell: |
+    echo "Types: deb
+    URIs: https://download.docker.com/linux/debian
+    Suites: {{ ansible_distribution_release }}
+    Components: stable
+    Signed-By: /etc/apt/keyrings/docker.asc" > /etc/apt/sources.list.d/docker.sources
+  args:
+    creates: /etc/apt/sources.list.d/docker.sources
+
+- name: Install Docker
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+
+- name: Enable and start Docker
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: Add db user to docker group
+  user:
+    name: db
+    groups: docker
+    append: yes
+
+- name: Create monitoring directory structure
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: db
+    group: db
+    mode: "0755"
+  loop:
+    - "{{ monitoring_dir }}"
+    - "{{ monitoring_dir }}/grafana/provisioning"
+    - "{{ monitoring_dir }}/blackbox"
+    - "{{ monitoring_dir }}/gatus"
+    - "{{ monitoring_data_dir }}/victoriametrics"
+    - "{{ monitoring_data_dir }}/victorialogs"
+    - "{{ monitoring_data_dir }}/grafana"
+
+- name: Set correct permissions for Grafana data directory
+  file:
+    path: "{{ monitoring_data_dir }}/grafana"
+    state: directory
+    owner: "472"
+    group: "472"
+    mode: "0755"
+
+- name: Get Grafana admin password from Bitwarden
+  set_fact:
+    grafana_admin_password: "{{ lookup('bitwarden.secrets.lookup', bw_grafana_admin_password, base_url='https://vault.bitwarden.eu') }}"
+
+- name: Deploy Docker Compose file
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ monitoring_dir }}/docker-compose.yml"
+    owner: db
+    group: db
+    mode: "0640"
+  notify: Restart monitoring stack
+
+- name: Deploy Blackbox config
+  template:
+    src: blackbox-config.yml.j2
+    dest: "{{ monitoring_dir }}/blackbox/config.yml"
+    owner: db
+    group: db
+    mode: "0644"
+  notify: Restart monitoring stack
+
+- name: Deploy Gatus config
+  template:
+    src: gatus-config.yaml.j2
+    dest: "{{ monitoring_dir }}/gatus/config.yaml"
+    owner: db
+    group: db
+    mode: "0644"
+  notify: Restart monitoring stack
+
+- name: Start monitoring stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ monitoring_dir }}"
+    state: present
+    pull: always

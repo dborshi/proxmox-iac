@@ -1,7 +1,7 @@
 ---
 # Versions
 vm_version: "latest"
-vl_version: "latest-victorialogs"
+vl_version: "latest"
 grafana_version: "latest"
 gatus_version: "latest"
 blackbox_version: "latest"
