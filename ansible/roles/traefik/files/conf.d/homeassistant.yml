@@ -1,0 +1,13 @@
+http:
+  routers:
+    homeassistant:
+      rule: "Host(`ha.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: homeassistant-svc
+  services:
+    homeassistant-svc:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.60:8123"
+        passHostHeader: true

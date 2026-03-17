@@ -1,0 +1,6 @@
+---
+- name: Configure proxy LXC
+  hosts: proxy
+  become: true
+  roles:
+    - traefik

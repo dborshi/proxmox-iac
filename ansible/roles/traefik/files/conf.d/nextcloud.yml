@@ -1,0 +1,16 @@
+http:
+  serversTransports:
+    nextcloud-transport:
+      insecureSkipVerify: true
+  routers:
+    nextcloud:
+      rule: "Host(`nextcloud.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: nextcloud-svc
+  services:
+    nextcloud-svc:
+      loadBalancer:
+        serversTransport: nextcloud-transport
+        servers:
+          - url: "https://10.0.0.51:443"

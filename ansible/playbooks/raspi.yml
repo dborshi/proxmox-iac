@@ -1,0 +1,33 @@
+---
+- name: Configure Raspberry Pi Pi-hole
+  hosts: raspi
+  become: true
+  tasks:
+    - name: Set local DNS A records
+      command:
+        cmd: pihole-FTL --config dns.hosts '["10.0.0.20 proxy.dbnet.work", "10.0.0.22 pihole.dbnet.work", "10.0.0.5 raspi.dbnet.work"]'
+      changed_when: true
+
+    - name: Set local CNAME records
+      command:
+        cmd: >
+          pihole-FTL --config dns.cnameRecords
+          '["backup.dbnet.work,proxy.dbnet.work",
+            "beszel.dbnet.work,proxy.dbnet.work",
+            "dockhand.dbnet.work,proxy.dbnet.work",
+            "flaresolverr.dbnet.work,proxy.dbnet.work",
+            "ha.dbnet.work,proxy.dbnet.work",
+            "immich.dbnet.work,proxy.dbnet.work",
+            "jellyfin.dbnet.work,proxy.dbnet.work",
+            "nextcloud.dbnet.work,proxy.dbnet.work",
+            "proxmox.dbnet.work,proxy.dbnet.work",
+            "traefik.dbnet.work,proxy.dbnet.work",
+            "sonarr.dbnet.work,proxy.dbnet.work",
+            "radarr.dbnet.work,proxy.dbnet.work",
+            "prowlarr.dbnet.work,proxy.dbnet.work",
+            "qbit.dbnet.work,proxy.dbnet.work",
+            "seerr.dbnet.work,proxy.dbnet.work",
+            "monitor.dbnet.work,proxy.dbnet.work",
+            "dns.dbnet.work,proxy.dbnet.work",
+            "tailscale.dbnet.work,proxy.dbnet.work"]'
+      changed_when: true

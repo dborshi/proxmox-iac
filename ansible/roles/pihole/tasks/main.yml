@@ -1,0 +1,135 @@
+---
+- name: Get Pi-hole admin password from Bitwarden
+  set_fact:
+    pihole_password: "{{ lookup('bitwarden.secrets.lookup', bw_pihole_password, base_url='https://vault.bitwarden.eu') }}"
+  no_log: true
+
+- name: Install required packages
+  apt:
+    name:
+      - curl
+      - git
+      - libcap2-bin
+    state: present
+    update_cache: yes
+
+- name: Set temporary nameserver for installation
+  copy:
+    content: "nameserver 8.8.8.8\n"
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create Pi-hole config directory
+  file:
+    path: /etc/pihole
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy Pi-hole unattended install config
+  template:
+    src: setupVars.conf.j2
+    dest: /etc/pihole/setupVars.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Download Pi-hole installer
+  get_url:
+    url: https://install.pi-hole.net
+    dest: /tmp/pihole-install.sh
+    mode: '0755'
+
+- name: Run Pi-hole unattended installer
+  command: bash /tmp/pihole-install.sh --unattended
+  args:
+    creates: /usr/local/bin/pihole
+  environment:
+    PIHOLE_SKIP_OS_CHECK: "true"
+
+- name: Set static resolv.conf pointing to localhost
+  copy:
+    content: "nameserver 127.0.0.1\n"
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Set Pi-hole admin password
+  command: pihole -a -p "{{ pihole_password }}"
+  no_log: true
+  changed_when: true
+
+- name: Configure Pi-hole upstream DNS to Unbound
+  lineinfile:
+    path: /etc/pihole/setupVars.conf
+    regexp: "^PIHOLE_DNS_1="
+    line: "PIHOLE_DNS_1=127.0.0.1#5335"
+  notify: Restart Pi-hole DNS
+
+- name: Remove secondary upstream DNS entry
+  lineinfile:
+    path: /etc/pihole/setupVars.conf
+    regexp: "^PIHOLE_DNS_2="
+    state: absent
+  notify: Restart Pi-hole DNS
+
+- name: Enable DNSSEC in Pi-hole
+  lineinfile:
+    path: /etc/pihole/setupVars.conf
+    regexp: "^DNSSEC="
+    line: "DNSSEC=true"
+  notify: Restart Pi-hole DNS
+
+- name: Ensure pihole-FTL is enabled and started
+  systemd:
+    name: pihole-FTL
+    enabled: yes
+    state: started
+
+- name: Ensure /usr/local/bin is in PATH
+  lineinfile:
+    path: /etc/environment
+    regexp: '^PATH='
+    line: 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"'
+
+- name: Set Pi-hole admin password
+  command: /usr/local/bin/pihole -a -p "{{ pihole_password }}"
+  no_log: true
+  changed_when: true
+
+- name: Restart Pi-hole DNS
+  command: /usr/local/bin/pihole restartdns
+  changed_when: true
+
+- name: Set local DNS A records
+  command:
+    cmd: pihole-FTL --config dns.hosts '["10.0.0.20 proxy.dbnet.work", "10.0.0.22 pihole.dbnet.work", "10.0.0.5 raspi.dbnet.work"]'
+  changed_when: true
+
+- name: Set local CNAME records
+  command:
+    cmd: >
+      pihole-FTL --config dns.cnameRecords
+      '["backup.dbnet.work,proxy.dbnet.work",
+        "beszel.dbnet.work,proxy.dbnet.work",
+        "dockhand.dbnet.work,proxy.dbnet.work",
+        "flaresolverr.dbnet.work,proxy.dbnet.work",
+        "ha.dbnet.work,proxy.dbnet.work",
+        "immich.dbnet.work,proxy.dbnet.work",
+        "jellyfin.dbnet.work,proxy.dbnet.work",
+        "nextcloud.dbnet.work,proxy.dbnet.work",
+        "proxmox.dbnet.work,proxy.dbnet.work",
+        "traefik.dbnet.work,proxy.dbnet.work",
+        "sonarr.dbnet.work,proxy.dbnet.work",
+        "radarr.dbnet.work,proxy.dbnet.work",
+        "prowlarr.dbnet.work,proxy.dbnet.work",
+        "qbit.dbnet.work,proxy.dbnet.work",
+        "seerr.dbnet.work,proxy.dbnet.work",
+        "monitor.dbnet.work,proxy.dbnet.work",
+        "dns.dbnet.work,proxy.dbnet.work",
+        "tailscale.dbnet.work,proxy.dbnet.work"]'
+  changed_when: true

@@ -1,15 +1,15 @@
-resource "proxmox_virtual_environment_container" "monitor_lxc" {
+resource "proxmox_virtual_environment_container" "tailscale_lxc" {
   node_name     = "proxmox"
-  vm_id         = 130
+  vm_id         = 121
   unprivileged  = true
   start_on_boot = true
 
   initialization {
-    hostname = "monitor"
-    
+    hostname = "tailscale"
+
     ip_config {
       ipv4 {
-        address = "10.0.0.30/24"
+        address = "10.0.0.21/24"
         gateway = "10.0.0.1"
       }
     }
@@ -18,38 +18,30 @@ resource "proxmox_virtual_environment_container" "monitor_lxc" {
       password = data.bitwarden-secrets_secret.lxc_root_password.value
       keys     = [data.bitwarden-secrets_secret.ssh_pub_key2.value]
     }
-
   }
 
   cpu {
-    cores = 2
+    cores = 1
   }
 
   memory {
-    dedicated = 8192
-    swap      = 2048
+    dedicated = 512
+    swap      = 512
   }
 
   network_interface {
-    name    = "eth0"
-    bridge  = "vmbr0"
+    name   = "eth0"
+    bridge = "vmbr0"
   }
 
   disk {
     datastore_id = "local-zfs"
-    size         = 20
+    size         = 4
   }
 
-  mount_point {
-    volume       = "datapool"
-    size         = "100G"
-    path         = "/mnt/logs"
-    backup       = true
-  }
-  
   operating_system {
-  type             = "debian"
-  template_file_id = "local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst"
+    type             = "debian"
+    template_file_id = "local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst"
   }
 
   features {

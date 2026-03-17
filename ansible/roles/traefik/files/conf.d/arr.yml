@@ -1,0 +1,73 @@
+http:
+  routers:
+    sonarr:
+      rule: "Host(`sonarr.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: sonarr-svc
+    radarr:
+      rule: "Host(`radarr.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: radarr-svc
+    prowlarr:
+      rule: "Host(`prowlarr.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: prowlarr-svc
+    qbittorrent:
+      rule: "Host(`qbit.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: qbittorrent-svc
+    jellyfin:
+      rule: "Host(`jellyfin.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: jellyfin-svc
+    flaresolverr:
+      rule: "Host(`flaresolverr.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: flaresolverr-svc
+    seerr:
+      rule: "Host(`seerr.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: seerr-svc
+  services:
+    sonarr-svc:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.60:8989"
+        passHostHeader: true
+    radarr-svc:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.60:7878"
+        passHostHeader: true
+    prowlarr-svc:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.60:9696"
+        passHostHeader: true
+    qbittorrent-svc:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.60:8080"
+        passHostHeader: true
+    jellyfin-svc:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.60:8096"
+        passHostHeader: true
+    flaresolverr-svc:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.60:8191"
+        passHostHeader: true
+    seerr-svc:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.60:5055"
+        passHostHeader: true

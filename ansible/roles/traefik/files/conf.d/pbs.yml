@@ -1,0 +1,16 @@
+http:
+  serversTransports:
+    pbs-transport:
+      insecureSkipVerify: true
+  routers:
+    pbs:
+      rule: "Host(`backup.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: pbs-svc
+  services:
+    pbs-svc:
+      loadBalancer:
+        serversTransport: pbs-transport
+        servers:
+          - url: "https://10.0.0.11:8007"

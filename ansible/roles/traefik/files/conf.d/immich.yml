@@ -1,0 +1,16 @@
+http:
+  serversTransports:
+    immich-transport:
+      insecureSkipVerify: true
+  routers:
+    immich:
+      rule: "Host(`immich.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: immich-svc
+  services:
+    immich-svc:
+      loadBalancer:
+        serversTransport: immich-transport
+        servers:
+          - url: "http://10.0.0.50:2283"

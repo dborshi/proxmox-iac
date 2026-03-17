@@ -8,7 +8,6 @@
     timezone: "Europe/Tirane"
 
   tasks:
-
     - name: Get SSH public key from Bitwarden
       set_fact:
         ssh_public_key: "{{ lookup('bitwarden.secrets.lookup', bw_ssh_public_key, base_url='https://vault.bitwarden.eu') }}"

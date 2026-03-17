@@ -1,0 +1,13 @@
+http:
+  routers:
+    dashboard:
+      rule: "Host(`traefik.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: "api@internal"
+      middlewares: ["dbnet-auth"]
+  middlewares:
+    dbnet-auth:
+      basicAuth:
+        realm: "dbnet"
+        usersFile: "/etc/traefik/auth/.users.htpasswd"

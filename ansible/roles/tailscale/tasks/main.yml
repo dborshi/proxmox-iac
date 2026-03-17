@@ -1,0 +1,75 @@
+---
+- name: Get Tailscale auth key from Bitwarden
+  set_fact:
+    tailscale_auth_key: "{{ lookup('bitwarden.secrets.lookup', bw_tailscale_auth_key, base_url='https://vault.bitwarden.eu') }}"
+  no_log: true
+
+- name: Install curl
+  apt:
+    name: curl
+    state: present
+    update_cache: yes
+
+- name: Add Tailscale apt signing key
+  get_url:
+    url: https://pkgs.tailscale.com/stable/debian/bookworm.gpg
+    dest: /usr/share/keyrings/tailscale-archive-keyring.asc
+    mode: '0644'
+
+- name: Add Tailscale apt repository
+  copy:
+    content: "deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.asc] https://pkgs.tailscale.com/stable/debian bookworm main\n"
+    dest: /etc/apt/sources.list.d/tailscale.list
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Install Tailscale
+  apt:
+    name: tailscale
+    state: present
+    update_cache: yes
+
+- name: Enable and start tailscaled
+  systemd:
+    name: tailscaled
+    enabled: yes
+    state: started
+
+- name: Enable IPv4 forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: Enable IPv6 forwarding
+  sysctl:
+    name: net.ipv6.conf.all.forwarding
+    value: '1'
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: Persist sysctl settings
+  copy:
+    content: |
+      net.ipv4.ip_forward = 1
+      net.ipv6.conf.all.forwarding = 1
+    dest: /etc/sysctl.d/99-tailscale.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Bring up Tailscale as subnet router for 10.0.0.0/24
+  command: >
+    tailscale up
+    --authkey={{ tailscale_auth_key }}
+    --advertise-routes=10.0.0.0/24
+    --accept-routes
+    --hostname=proxmox-lxc
+    --force-reauth
+  async: 35
+  poll: 0
+  changed_when: true

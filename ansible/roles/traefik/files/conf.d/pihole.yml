@@ -1,0 +1,13 @@
+http:
+  routers:
+    pihole:
+      rule: "Host(`pihole.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: pihole-svc
+  services:
+    pihole-svc:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.22:80"
+        passHostHeader: true

@@ -1,0 +1,13 @@
+http:
+  routers:
+    dockhand:
+      rule: "Host(`dockhand.dbnet.work`)"
+      entryPoints: ["websecure"]
+      tls: {}
+      service: dockhand-svc
+  services:
+    dockhand-svc:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.60:3000"
+        passHostHeader: true

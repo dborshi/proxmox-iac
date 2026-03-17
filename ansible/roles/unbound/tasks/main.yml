@@ -1,0 +1,38 @@
+---
+- name: Set temporary nameserver for package installation
+  copy:
+    content: "nameserver 8.8.8.8\n"
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Install Unbound and dependencies
+  apt:
+    name:
+      - unbound
+      - unbound-anchor
+      - dns-root-data
+    state: present
+    update_cache: yes
+
+- name: Initialize DNSSEC root trust anchor
+  command: unbound-anchor -a /var/lib/unbound/root.key
+  args:
+    creates: /var/lib/unbound/root.key
+  ignore_errors: yes
+
+- name: Deploy Unbound config
+  copy:
+    src: unbound.conf
+    dest: /etc/unbound/unbound.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Unbound
+
+- name: Enable and start Unbound
+  systemd:
+    name: unbound
+    enabled: yes
+    state: started

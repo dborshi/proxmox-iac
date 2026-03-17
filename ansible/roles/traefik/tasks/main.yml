@@ -1,0 +1,161 @@
+---
+- name: Get Cloudflare API token from Bitwarden
+  set_fact:
+    cf_api_token: "{{ lookup('bitwarden.secrets.lookup', bw_cf_api_token, base_url='https://vault.bitwarden.eu') }}"
+  no_log: true
+
+- name: Get Traefik dashboard htpasswd from Bitwarden
+  set_fact:
+    traefik_htpasswd: "{{ lookup('bitwarden.secrets.lookup', bw_traefik_htpasswd, base_url='https://vault.bitwarden.eu') }}"
+  no_log: true
+
+- name: Install required packages
+  apt:
+    name:
+      - curl
+      - wget
+      - apache2-utils
+      - certbot
+      - python3-certbot-dns-cloudflare
+    state: present
+    update_cache: yes
+
+- name: Get latest Traefik version from GitHub
+  uri:
+    url: https://api.github.com/repos/traefik/traefik/releases/latest
+    return_content: yes
+  register: traefik_release
+
+- name: Set Traefik version fact
+  set_fact:
+    traefik_version: "{{ traefik_release.json.tag_name | regex_replace('^v', '') }}"
+
+- name: Download Traefik binary archive
+  get_url:
+    url: "https://github.com/traefik/traefik/releases/download/v{{ traefik_version }}/traefik_v{{ traefik_version }}_linux_amd64.tar.gz"
+    dest: /tmp/traefik.tar.gz
+    mode: '0644'
+
+- name: Extract Traefik binary
+  unarchive:
+    src: /tmp/traefik.tar.gz
+    dest: /usr/local/bin/
+    remote_src: yes
+    include:
+      - traefik
+
+- name: Set Traefik binary permissions
+  file:
+    path: /usr/local/bin/traefik
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Create Traefik directory structure
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - /etc/traefik
+    - /etc/traefik/conf.d
+    - /etc/traefik/certs
+    - /etc/traefik/auth
+    - /var/log/traefik
+
+- name: Deploy Traefik static config
+  template:
+    src: traefik.yml.j2
+    dest: /etc/traefik/traefik.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Traefik
+
+- name: Deploy Traefik dynamic configs (conf.d)
+  copy:
+    src: conf.d/
+    dest: /etc/traefik/conf.d/
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Traefik
+
+- name: Deploy htpasswd file for dashboard auth
+  copy:
+    content: "{{ traefik_htpasswd }}"
+    dest: /etc/traefik/auth/.users.htpasswd
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Deploy Traefik systemd service
+  copy:
+    src: traefik.service
+    dest: /etc/systemd/system/traefik.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Reload systemd
+    - Restart Traefik
+
+- name: Create Cloudflare credentials file for certbot
+  copy:
+    content: "dns_cloudflare_api_token = {{ cf_api_token }}\n"
+    dest: /etc/traefik/certs/cloudflare.ini
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Issue wildcard cert via Cloudflare DNS challenge
+  command: >
+    certbot certonly
+    --dns-cloudflare
+    --dns-cloudflare-credentials /etc/traefik/certs/cloudflare.ini
+    --email admin@dbnet.work
+    --agree-tos
+    --non-interactive
+    -d "dbnet.work"
+    -d "*.dbnet.work"
+    --cert-name dbnet.work
+  args:
+    creates: /etc/letsencrypt/live/dbnet.work/fullchain.pem
+
+- name: Copy certs to Traefik certs directory
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: '0600'
+  loop:
+    - { src: /etc/letsencrypt/live/dbnet.work/fullchain.pem, dest: /etc/traefik/certs/fullchain.dbnet.crt }
+    - { src: /etc/letsencrypt/live/dbnet.work/privkey.pem,   dest: /etc/traefik/certs/wildcard.dbnet.key }
+  notify: Restart Traefik
+
+- name: Deploy cert renewal hook
+  copy:
+    src: renew-traefik-certs.sh
+    dest: /etc/letsencrypt/renewal-hooks/deploy/traefik.sh
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Schedule weekly certbot renewal
+  cron:
+    name: "certbot renew"
+    minute: "0"
+    hour: "3"
+    day: "*/7"
+    job: "certbot renew --quiet"
+
+- name: Enable and start Traefik
+  systemd:
+    name: traefik
+    enabled: yes
+    state: started
+    daemon_reload: yes

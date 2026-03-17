@@ -1,0 +1,20 @@
+---
+- name: Configure Proxmox host for Tailscale LXC
+  hosts: proxmox
+  tasks:
+    - name: Add TUN device access to Tailscale LXC config
+      blockinfile:
+        path: /etc/pve/lxc/121.conf
+        block: |
+          lxc.cgroup2.devices.allow: c 10:200 rwm
+          lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file
+        marker: "# {mark} ANSIBLE MANAGED - tailscale tun"
+
+    - name: Restart Tailscale LXC to apply changes
+      command: pct reboot 121
+
+- name: Configure Tailscale LXC
+  hosts: tailscale
+  become: true
+  roles:
+    - tailscale
