@@ -1,0 +1,43 @@
+- name: Install fuse3
+  package:
+    name: fuse3
+    state: present
+
+- name: Create /mnt/arr mountpoint
+  file:
+    path: /mnt/arr
+    state: directory
+    mode: "0755"
+
+- name: Mount virtiofs arr share via fstab
+  mount:
+    path: /mnt/arr
+    src: mediapool
+    fstype: virtiofs
+    opts: defaults,_netdev
+    state: mounted
+
+- name: Create TRaSH unified folder structure
+  file:
+    path: "/mnt/arr/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - media/movies
+    - media/tv
+    - downloads/torrents
+    - downloads/usenet
+
+- name: Create appdata directories
+  file:
+    path: "/opt/appdata/arr/config/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - prowlarr
+    - radarr
+    - sonarr
+    - qbittorrent
+    - jellyfin
+    - seerr
+    - bazarr

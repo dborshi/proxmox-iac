@@ -22,3 +22,8 @@ variable "bw_ssh_pub_key2" {
   type      = string
   sensitive = true
 }
+
+variable "bw_vm_root_password" {
+  type      = string
+  sensitive = true
+}

@@ -13,3 +13,7 @@ data "bitwarden-secrets_secret" "lxc_root_password" {
 data "bitwarden-secrets_secret" "ssh_pub_key2" {
     id = var.bw_ssh_pub_key2
 }
+
+data "bitwarden-secrets_secret" "vm_root_password" {
+    id = var.bw_vm_root_password
+}

@@ -1,0 +1,7 @@
+---
+- name: Configure arr VM
+  hosts: arr
+  become: true
+  roles:
+    - virtiofs_guest
+    - docker

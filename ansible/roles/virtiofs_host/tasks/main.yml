@@ -1,0 +1,17 @@
+- name: Ensure virtiofsd is installed
+  package:
+    name: virtiofsd
+    state: present
+
+- name: Create directory mapping for mediapool
+  command: >
+    pvesh create /cluster/mapping/dir
+    --id mediapool
+    --map node=proxmox,path=/srv/mediapool
+  failed_when: false
+
+- name: Attach virtiofs to VM
+  command: qm set 160 --virtiofs0 dirid=mediapool,cache=auto
+
+- name: Reboot VM to apply virtiofs
+  command: qm reboot 160

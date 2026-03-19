@@ -2,7 +2,7 @@ terraform {
   required_providers {
     proxmox = {
       source  = "bpg/proxmox"
-      version = "0.97.1"
+      version = "0.98.1"
     }
     bitwarden-secrets = {
       source  = "bitwarden/bitwarden-secrets"
@@ -21,4 +21,8 @@ provider "proxmox" {
   endpoint  = "https://10.0.0.10:8006/"
   api_token = "${data.bitwarden-secrets_secret.pve_token_id.value}=${data.bitwarden-secrets_secret.pve_token_secret.value}"
   insecure  = true
+  ssh {
+    username    = "user"
+    private_key = file("~/.ssh/id_key1")
+  }
 }

@@ -1,0 +1,15 @@
+zfs_pool_name: mediapool
+
+zfs_mirror_pairs:
+  - - /dev/disk/by-id/ata-WDC_WD20EFRX-68EUZN0_WD-WMC4M1226011   # sde
+    - /dev/disk/by-id/ata-WDC_WD20EFRX-68AX9N0_WD-WMC300938645    # sdg
+  - - /dev/disk/by-id/ata-WDC_WD20EFRX-68EUZN0_WD-WMC4M1308546   # sdf
+    - /dev/disk/by-id/ata-WDC_WD20EFRX-68AX9N0_WD-WMC301013328    # sdc
+
+zfs_datasets:
+  - mediapool/media
+  - mediapool/media/movies
+  - mediapool/media/tv
+  - mediapool/downloads
+  - mediapool/downloads/torrents
+  - mediapool/downloads/usenet

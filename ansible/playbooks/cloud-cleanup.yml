@@ -1,0 +1,46 @@
+- name: Remove default cloud user
+  hosts: arr
+  remote_user: db
+  become: true
+  tasks:
+    - name: Remove debian user
+      user:
+        name: debian
+        state: absent
+        remove: yes
+      ignore_errors: yes
+    - name: Remove cloud-init
+      apt:
+        name:
+          - cloud-init
+          - cloud-initramfs-growroot
+        state: absent
+        purge: yes
+    - name: Install qemu-guest-agent
+      apt:
+        name: qemu-guest-agent
+        state: present
+    - name: Enable qemu-guest-agent
+      service:
+        name: qemu-guest-agent
+        enabled: true
+        state: started
+    - name: Remove cloud-init directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/cloud
+        - /var/lib/cloud
+    - name: Remove unnecessary packages
+      apt:
+        name:
+          - aptitude
+          - tasksel
+        state: absent
+        purge: yes
+
+    - name: Autoremove unused packages
+      apt:
+        autoremove: yes
+        purge: yes
