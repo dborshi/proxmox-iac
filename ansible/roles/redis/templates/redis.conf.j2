@@ -1,0 +1,27 @@
+bind 127.0.0.1 {{ ansible_host }}
+port 6379
+requirepass {{ redis_password }}
+
+# Memory
+maxmemory 3gb
+maxmemory-policy allkeys-lru
+
+# Persistence - RDB snapshots
+save 3600 1
+save 300 100
+save 60 10000
+
+dir /var/lib/redis
+dbfilename dump.rdb
+
+# Logging
+loglevel notice
+logfile /var/log/redis/redis-server.log
+
+# Performance
+tcp-keepalive 300
+timeout 0
+tcp-backlog 511
+
+# Databases
+databases 16

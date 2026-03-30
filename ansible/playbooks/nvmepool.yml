@@ -1,0 +1,7 @@
+---
+- name: Configure Proxmox host
+  hosts: proxmox
+  remote_user: db
+  become: true
+  roles:
+    - zfs_nvmepool

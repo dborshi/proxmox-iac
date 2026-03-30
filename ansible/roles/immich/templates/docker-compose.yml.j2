@@ -1,0 +1,35 @@
+# Managed by Ansible - do not edit manually
+name: immich
+
+services:
+  immich-server:
+    container_name: immich_server
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    volumes:
+      - ${UPLOAD_LOCATION}:/usr/src/app/upload
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - .env
+    ports:
+      - "2283:2283"
+    restart: always
+    healthcheck:
+      disable: false
+    devices:
+      - /dev/dri:/dev/dri
+
+  immich-machine-learning:
+    container_name: immich_machine_learning
+    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+    volumes:
+      - model-cache:/cache
+    env_file:
+      - .env
+    restart: always
+    healthcheck:
+      disable: false
+    devices:
+      - /dev/dri:/dev/dri
+
+volumes:
+  model-cache:

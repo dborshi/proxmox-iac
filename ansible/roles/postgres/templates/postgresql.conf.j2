@@ -1,0 +1,29 @@
+# Managed by Ansible - do not edit manually
+
+# VectorChord (required for Immich)
+shared_preload_libraries = 'vchord'
+
+# Connections
+listen_addresses = '127.0.0.1,{{ ansible_host }}'
+port = 5432
+max_connections = 100
+
+# Memory
+shared_buffers = 2GB
+work_mem = 16MB
+maintenance_work_mem = 512MB
+effective_cache_size = 6GB
+
+# WAL
+wal_level = replica
+max_wal_size = 1GB
+min_wal_size = 80MB
+
+# NVMe tuning
+random_page_cost = 1.1
+effective_io_concurrency = 200
+io_method = io_uring
+
+# Logging
+log_timezone = 'Europe/Tirane'
+timezone = 'Europe/Tirane'

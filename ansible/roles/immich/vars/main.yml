@@ -1,0 +1,4 @@
+immich_app_dir: /opt/immich
+immich_media_dir: /mnt/immich
+postgres_host: "10.0.0.15"
+redis_host: "10.0.0.16"

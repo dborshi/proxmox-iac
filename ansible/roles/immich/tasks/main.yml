@@ -1,0 +1,90 @@
+- name: Install dependencies
+  apt:
+    name:
+      - curl
+      - gnupg
+      - ca-certificates
+    state: present
+    update_cache: yes
+
+- name: Create keyrings directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Add Docker GPG key
+  get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+
+- name: Add Docker repository
+  shell: |
+    echo "Types: deb
+    URIs: https://download.docker.com/linux/debian
+    Suites: {{ ansible_distribution_release }}
+    Components: stable
+    Signed-By: /etc/apt/keyrings/docker.asc" > /etc/apt/sources.list.d/docker.sources
+  args:
+    creates: /etc/apt/sources.list.d/docker.sources
+
+- name: Install Docker
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+
+- name: Enable and start Docker
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: Create Immich app directory
+  file:
+    path: "{{ immich_app_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Ensure Immich media mountpoint exists
+  file:
+    path: /mnt/immich
+    state: directory
+    mode: "0755"
+
+- name: Get Immich DB password from Bitwarden
+  set_fact:
+    immich_db_password: "{{ lookup('bitwarden.secrets.lookup', bw_immich_db_password, base_url='https://vault.bitwarden.eu') }}"
+
+- name: Get Redis password from Bitwarden
+  set_fact:
+    immich_redis_password: "{{ lookup('bitwarden.secrets.lookup', bw_redis_password, base_url='https://vault.bitwarden.eu') }}"
+
+- name: Get Immich JWT secret from Bitwarden
+  set_fact:
+    immich_jwt_secret: "{{ lookup('bitwarden.secrets.lookup', bw_immich_jwt_secret, base_url='https://vault.bitwarden.eu') }}"
+
+- name: Deploy docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ immich_app_dir }}/docker-compose.yml"
+    mode: "0640"
+
+- name: Deploy .env file
+  template:
+    src: .env.j2
+    dest: "{{ immich_app_dir }}/.env"
+    mode: "0600"
+  notify: Restart Immich
+
+- name: Start Immich stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ immich_app_dir }}"
+    state: present
+    pull: always

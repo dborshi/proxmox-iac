@@ -1,0 +1,5 @@
+zfs_pool_name: nvmepool
+
+zfs_mirror_disks:
+  - /dev/disk/by-id/nvme-SAMSUNG_MZVLB512HAJQ-000L7_S3TNNE0JC48245
+  - /dev/disk/by-id/nvme-SAMSUNG_MZVLB512HAJQ-000L7_S3TNNX0M751320

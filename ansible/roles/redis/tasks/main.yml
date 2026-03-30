@@ -1,0 +1,50 @@
+- name: Set correct ownership on Redis data directory
+  file:
+    path: /var/lib/redis
+    state: directory
+    owner: redis
+    group: redis
+    mode: "0750"
+
+- name: Install Redis
+  apt:
+    name: redis-server
+    state: present
+    update_cache: yes
+
+- name: Create systemd override directory for Redis
+  file:
+    path: /etc/systemd/system/redis-server.service.d
+    state: directory
+    mode: "0755"
+
+- name: Override PrivateUsers for unprivileged LXC
+  copy:
+    dest: /etc/systemd/system/redis-server.service.d/override.conf
+    content: |
+      [Service]
+      PrivateUsers=false
+    mode: "0644"
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Get Redis password from Bitwarden
+  set_fact:
+    redis_password: "{{ lookup('bitwarden.secrets.lookup', bw_redis_password, base_url='https://vault.bitwarden.eu') }}"
+
+- name: Deploy Redis config
+  template:
+    src: redis.conf.j2
+    dest: /etc/redis/redis.conf
+    owner: redis
+    group: redis
+    mode: "0640"
+  notify: Restart Redis
+
+- name: Enable and start Redis
+  systemd:
+    name: redis-server
+    enabled: yes
+    state: started

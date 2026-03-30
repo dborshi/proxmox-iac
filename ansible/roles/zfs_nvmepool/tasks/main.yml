@@ -1,0 +1,35 @@
+- name: Check if nvmepool already exists
+  command: zpool list {{ zfs_pool_name }}
+  register: pool_check
+  failed_when: false
+  changed_when: false
+
+- name: Create nvmepool with mirrored NVMe pair
+  command: >
+    zpool create -f {{ zfs_pool_name }}
+    mirror {{ zfs_mirror_disks | join(' ') }}
+  when: pool_check.rc != 0
+
+- name: Set pool-level properties
+  command: "zfs set {{ item }} {{ zfs_pool_name }}"
+  loop:
+    - compression=lz4
+    - atime=off
+    - xattr=sa
+    - dnodesize=auto
+  changed_when: false
+
+- name: Set mountpoint on pool root
+  command: zfs set mountpoint=/srv/nvmepool {{ zfs_pool_name }}
+  failed_when: false
+  changed_when: false
+
+- name: Check if nvmepool is registered in Proxmox storage
+  command: pvesm status --storage nvmepool
+  register: pvesm_check
+  failed_when: false
+  changed_when: false
+
+- name: Register nvmepool in Proxmox storage
+  command: pvesm add zfspool nvmepool --pool nvmepool --sparse 1
+  when: pvesm_check.rc != 0
