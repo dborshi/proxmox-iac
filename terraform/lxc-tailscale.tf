@@ -4,6 +4,13 @@ resource "proxmox_virtual_environment_container" "tailscale_lxc" {
   unprivileged  = true
   start_on_boot = true
 
+  startup {
+    down_delay = -1
+    order      = 4
+    up_delay   = -1
+  }
+
+
   initialization {
     hostname = "tailscale"
 

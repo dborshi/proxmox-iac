@@ -39,35 +39,35 @@ http:
     sonarr-svc:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.60:8989"
+          - url: "http://10.0.0.55:8989"
         passHostHeader: true
     radarr-svc:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.60:7878"
+          - url: "http://10.0.0.55:7878"
         passHostHeader: true
     prowlarr-svc:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.60:9696"
+          - url: "http://10.0.0.55:9696"
         passHostHeader: true
     qbittorrent-svc:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.60:8080"
+          - url: "http://10.0.0.55:8080"
         passHostHeader: true
     jellyfin-svc:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.60:8096"
+          - url: "http://10.0.0.55:8096"
         passHostHeader: true
     flaresolverr-svc:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.60:8191"
+          - url: "http://10.0.0.55:8191"
         passHostHeader: true
     seerr-svc:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.60:5055"
+          - url: "http://10.0.0.55:5055"
         passHostHeader: true

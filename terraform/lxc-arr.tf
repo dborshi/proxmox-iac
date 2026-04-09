@@ -1,23 +1,22 @@
-resource "proxmox_virtual_environment_container" "immich_lxc" {
+resource "proxmox_virtual_environment_container" "arr_lxc" {
   node_name     = "proxmox"
-  vm_id         = 150
+  vm_id         = 155
   unprivileged  = true
   start_on_boot = true
-  protection    = true
 
   startup {
     down_delay = -1
-    order      = 5
+    order      = 6
     up_delay   = -1
   }
 
 
   initialization {
-    hostname = "immich"
+    hostname = "arr-suite"
 
     ip_config {
       ipv4 {
-        address = "10.0.0.50/24"
+        address = "10.0.0.55/24"
         gateway = "10.0.0.1"
       }
     }
@@ -44,28 +43,36 @@ resource "proxmox_virtual_environment_container" "immich_lxc" {
 
   disk {
     datastore_id = "local-zfs"
-    size         = 32
+    size         = 20
   }
 
   mount_point {
-    volume  = "datapool"
-    size    = "400G"
-    path    = "/mnt/immich"
-    backup  = true
+    volume            = "nvmepool:subvol-155-disk-0"
+    size              = "64G"
+    path              = "/opt/appdata"
+    backup            = true
+  }
+
+  mount_point {
+    volume            = "/srv/mediapool"
+    path              = "/mnt/arr"
+    backup            = false
   }
 
   device_passthrough {
     deny_write = false
     gid        = 992
     mode       = "0660"
-    path       = "/dev/dri/by-path/pci-0000:0c:00.0-render"
+    path       = "/dev/dri/renderD128"
+    uid        = 0
   }
   
   device_passthrough {
     deny_write = false
     gid        = 44
     mode       = "0660"
-    path       = "/dev/dri/by-path/pci-0000:0c:00.0-card"
+    path       = "/dev/dri/card1"
+    uid        = 0
   }
 
   operating_system {

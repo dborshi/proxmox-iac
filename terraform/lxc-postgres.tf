@@ -4,6 +4,12 @@ resource "proxmox_virtual_environment_container" "postgres_lxc" {
   unprivileged  = true
   start_on_boot = true
 
+  startup {
+    down_delay = -1
+    order      = 1
+    up_delay   = -1
+  }
+
   initialization {
     hostname = "postgres"
     
