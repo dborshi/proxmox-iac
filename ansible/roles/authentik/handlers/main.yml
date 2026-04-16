@@ -1,0 +1,5 @@
+- name: Restart Authentik
+  community.docker.docker_compose_v2:
+    project_src: "{{ authentik_app_dir }}"
+    state: present
+    pull: always

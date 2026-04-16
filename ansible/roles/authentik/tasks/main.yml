@@ -46,45 +46,27 @@
     enabled: true
     state: started
 
-- name: Create Immich app directory
+- name: Create Authentik app directory
   ansible.builtin.file:
-    path: "{{ immich_app_dir }}"
+    path: "{{ authentik_app_dir }}"
     state: directory
     mode: "0755"
-
-- name: Ensure Immich media mountpoint exists
-  ansible.builtin.file:
-    path: /mnt/immich
-    state: directory
-    mode: "0755"
-
-- name: Get Immich DB password from Bitwarden
-  ansible.builtin.set_fact:
-    immich_db_password: "{{ lookup('bitwarden.secrets.lookup', bw_immich_db_password, base_url='https://vault.bitwarden.eu') }}"
-
-- name: Get Redis password from Bitwarden
-  ansible.builtin.set_fact:
-    immich_redis_password: "{{ lookup('bitwarden.secrets.lookup', bw_redis_password, base_url='https://vault.bitwarden.eu') }}"
-
-- name: Get Immich JWT secret from Bitwarden
-  ansible.builtin.set_fact:
-    immich_jwt_secret: "{{ lookup('bitwarden.secrets.lookup', bw_immich_jwt_secret, base_url='https://vault.bitwarden.eu') }}"
 
 - name: Deploy docker-compose.yml
   ansible.builtin.template:
     src: docker-compose.yml.j2
-    dest: "{{ immich_app_dir }}/docker-compose.yml"
+    dest: "{{ authentik_app_dir }}/docker-compose.yml"
     mode: "0640"
 
 - name: Deploy .env file
   ansible.builtin.template:
     src: .env.j2
-    dest: "{{ immich_app_dir }}/.env"
+    dest: "{{ authentik_app_dir }}/.env"
     mode: "0600"
-  notify: Restart Immich
+  notify: Restart Authentik
 
-- name: Start Immich stack
+- name: Start Authentik stack
   community.docker.docker_compose_v2:
-    project_src: "{{ immich_app_dir }}"
+    project_src: "{{ authentik_app_dir }}"
     state: present
     pull: always

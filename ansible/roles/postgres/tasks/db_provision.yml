@@ -1,0 +1,17 @@
+- name: Create {{ pg_user }} postgres user
+  community.postgresql.postgresql_user:
+    name: "{{ pg_user }}"
+    password: "{{ pg_password }}"
+    login_user: postgres
+    login_password: "{{ lookup('bitwarden.secrets.lookup', bw_postgres_db_password, base_url='https://vault.bitwarden.eu') }}"
+    login_host: 127.0.0.1
+  become: true
+
+- name: Create {{ pg_db }} database
+  community.postgresql.postgresql_db:
+    name: "{{ pg_db }}"
+    owner: "{{ pg_user }}"
+    login_user: postgres
+    login_password: "{{ lookup('bitwarden.secrets.lookup', bw_postgres_db_password, base_url='https://vault.bitwarden.eu') }}"
+    login_host: 127.0.0.1
+  become: true

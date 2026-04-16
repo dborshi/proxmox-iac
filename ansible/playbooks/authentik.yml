@@ -1,0 +1,16 @@
+- name: Provision authentik database
+  hosts: postgres
+  tasks:
+    - name: Provision authentik db
+      ansible.builtin.include_role:
+        name: postgres
+        tasks_from: db_provision.yml
+      vars:
+        pg_user: authentik
+        pg_password: "{{ lookup('bitwarden.secrets.lookup', bw_authentik_db_password, base_url='https://vault.bitwarden.eu') }}"
+        pg_db: authentik
+
+- name: Deploy authentik
+  hosts: authentik
+  roles:
+    - authentik

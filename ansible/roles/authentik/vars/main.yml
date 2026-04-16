@@ -1,0 +1,2 @@
+authentik_app_dir: /opt/authentik
+postgres_host: "10.0.0.15"

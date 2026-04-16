@@ -1,20 +1,20 @@
 - name: Install dependencies
-  apt:
+  ansible.builtin.apt:
     name:
       - curl
       - gnupg
       - python3-psycopg2
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Add PostgreSQL APT key
-  get_url:
+  ansible.builtin.get_url:
     url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
     dest: /etc/apt/keyrings/postgresql.asc
     mode: "0644"
 
 - name: Add PostgreSQL APT repository
-  copy:
+  ansible.builtin.copy:
     dest: /etc/apt/sources.list.d/postgresql.sources
     content: |
       Types: deb
@@ -25,16 +25,16 @@
     mode: "0644"
 
 - name: Install PostgreSQL 18 and pgvector
-  apt:
+  ansible.builtin.apt:
     name:
       - postgresql-18
       - postgresql-18-pgvector
       - postgresql-contrib
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Set correct ownership on PostgreSQL data directory
-  file:
+  ansible.builtin.file:
     path: /var/lib/postgresql
     state: directory
     owner: postgres
@@ -42,30 +42,30 @@
     mode: "0750"
 
 - name: Get architecture
-  command: dpkg --print-architecture
-  register: deb_arch
+  ansible.builtin.command: dpkg --print-architecture
+  register: postgres_deb_arch
   changed_when: false
 
 - name: Download VectorChord 1.1.1 for PostgreSQL 18
-  get_url:
-    url: "https://github.com/tensorchord/VectorChord/releases/download/1.1.1/postgresql-18-vchord_1.1.1-1_{{ deb_arch.stdout }}.deb"
+  ansible.builtin.get_url:
+    url: "https://github.com/tensorchord/VectorChord/releases/download/1.1.1/postgresql-18-vchord_1.1.1-1_{{ postgres_deb_arch.stdout }}.deb"
     dest: /tmp/vchord.deb
     mode: "0644"
 
 - name: Install VectorChord
-  apt:
+  ansible.builtin.apt:
     deb: /tmp/vchord.deb
     state: present
 
 # Fix PrivateUsers incompatibility with unprivileged LXC
 - name: Create systemd override directory for PostgreSQL
-  file:
+  ansible.builtin.file:
     path: /etc/systemd/system/postgresql.service.d
     state: directory
     mode: "0755"
 
 - name: Override PrivateUsers for unprivileged LXC
-  copy:
+  ansible.builtin.copy:
     dest: /etc/systemd/system/postgresql.service.d/override.conf
     content: |
       [Service]
@@ -73,11 +73,11 @@
     mode: "0644"
 
 - name: Reload systemd daemon
-  systemd:
-    daemon_reload: yes
+  ansible.builtin.systemd:
+    daemon_reload: true
 
 - name: Create PostgreSQL conf.d directory
-  file:
+  ansible.builtin.file:
     path: /etc/postgresql/18/main/conf.d
     state: directory
     owner: postgres
@@ -85,14 +85,14 @@
     mode: "0755"
 
 - name: Enable conf.d include in postgresql.conf
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/postgresql/18/main/postgresql.conf
     regexp: "^#?include_dir"
     line: "include_dir = 'conf.d'"
   notify: Restart PostgreSQL
 
 - name: Deploy PostgreSQL config
-  template:
+  ansible.builtin.template:
     src: postgresql.conf.j2
     dest: /etc/postgresql/18/main/conf.d/custom.conf
     owner: postgres
@@ -101,7 +101,7 @@
   notify: Restart PostgreSQL
 
 - name: Deploy pg_hba.conf
-  template:
+  ansible.builtin.template:
     src: pg_hba.conf.j2
     dest: /etc/postgresql/18/main/pg_hba.conf
     owner: postgres
@@ -110,7 +110,9 @@
   notify: Restart PostgreSQL
 
 - name: Enable and start PostgreSQL
-  systemd:
+  ansible.builtin.systemd:
     name: postgresql
-    enabled: yes
+    enabled: true
     state: started
+
+# Password manually set for postgres user to enable tcp authentication for Ansible

@@ -9,21 +9,21 @@
 
   tasks:
     - name: Get SSH public key from Bitwarden
-      set_fact:
+      ansible.builtin.set_fact:
         ssh_public_key: "{{ lookup('bitwarden.secrets.lookup', bw_ssh_public_key, base_url='https://vault.bitwarden.eu') }}"
 
     - name: Get sudo password from Bitwarden
-      set_fact:
+      ansible.builtin.set_fact:
         sudo_password: "{{ lookup('bitwarden.secrets.lookup', bw_pass_db_sudo, base_url='https://vault.bitwarden.eu') }}"
 
     - name: Update and upgrade all packages
-      apt:
-        update_cache: yes
+      ansible.builtin.apt:
+        update_cache: true
         upgrade: full
         cache_valid_time: 3600
 
     - name: Install essential packages
-      apt:
+      ansible.builtin.apt:
         name:
           - sudo
           - curl
@@ -35,45 +35,46 @@
         state: present
 
     - name: Set timezone
-      timezone:
+      community.general.timezone:
         name: "{{ timezone }}"
 
     - name: Enable unattended upgrades
-      debconf:
+      ansible.builtin.debconf:
         name: unattended-upgrades
         question: unattended-upgrades/enable_auto_updates
         value: "true"
         vtype: boolean
 
     - name: Create admin user
-      user:
+      ansible.builtin.user:
         name: "{{ admin_user }}"
         shell: /bin/bash
         password: "{{ sudo_password | password_hash('sha512') }}"
-        create_home: yes
+        create_home: true
         state: present
 
     - name: Add SSH key to admin user
-      authorized_key:
+      ansible.posix.authorized_key:
         user: "{{ admin_user }}"
         key: "{{ ssh_public_key }}"
         state: present
 
     - name: Add admin user to sudo group
-      user:
+      ansible.builtin.user:
         name: "{{ admin_user }}"
         groups: sudo
-        append: yes
+        append: true
 
     - name: Allow sudo with password for admin user
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/sudoers.d/{{ admin_user }}
         line: "{{ admin_user }} ALL=(ALL) ALL"
-        create: yes
+        create: true
+        mode: '0440'
         validate: "visudo -cf %s"
 
     - name: Harden SSH config
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/ssh/sshd_config
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
@@ -86,11 +87,11 @@
       notify: Restart SSH
 
     - name: Set hostname
-      hostname:
+      ansible.builtin.hostname:
         name: "{{ inventory_hostname }}"
 
   handlers:
     - name: Restart SSH
-      service:
+      ansible.builtin.service:
         name: sshd
         state: restarted
