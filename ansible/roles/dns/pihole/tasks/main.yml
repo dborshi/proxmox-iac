@@ -131,5 +131,8 @@
         "seerr.dbnet.work,proxy.dbnet.work",
         "monitor.dbnet.work,proxy.dbnet.work",
         "dns.dbnet.work,proxy.dbnet.work",
-        "tailscale.dbnet.work,proxy.dbnet.work"]'
+        "tailscale.dbnet.work,proxy.dbnet.work"
+        "postgres.dbnet.work,proxy.dbnet.work"
+        "redis.dbnet.work,proxy.dbnet.work"
+        "auth.dbnet.work,proxy.dbnet.work"]'
   changed_when: true

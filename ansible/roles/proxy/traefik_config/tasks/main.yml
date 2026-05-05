@@ -1,0 +1,31 @@
+- name: Get Traefik dashboard htpasswd from Bitwarden
+  ansible.builtin.set_fact:
+    proxy_traefik_htpasswd: "{{ lookup('bitwarden.secrets.lookup', bw_traefik_htpasswd, base_url='https://vault.bitwarden.eu') }}"
+  no_log: true
+
+- name: Deploy static config
+  ansible.builtin.template:
+    src: traefik.yml.j2
+    dest: /etc/traefik/traefik.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Traefik
+
+- name: Deploy SINGLE dynamic config
+  ansible.builtin.template:
+    src: dynamic.yml.j2
+    dest: /etc/traefik/dynamic.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Traefik
+
+- name: Deploy htpasswd
+  ansible.builtin.copy:
+    content: "{{ proxy_traefik_htpasswd }}"
+    dest: /etc/traefik/auth/.users.htpasswd
+    owner: root
+    group: root
+    mode: '0600'
+  notify: Restart Traefik

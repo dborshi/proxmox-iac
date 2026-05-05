@@ -1,0 +1,7 @@
+kc_db_host: localhost
+kc_db_name: keycloak
+kc_db_user: keycloak
+kc_db_password: changeme
+kc_hostname: keycloak.example.com
+kc_admin_user: admin
+kc_admin_password: changeme

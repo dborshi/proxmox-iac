@@ -1,0 +1,50 @@
+http:
+  serversTransports:
+    insecure:
+      insecureSkipVerify: true
+
+  middlewares:
+    dbnet-auth:
+      basicAuth:
+        realm: "dbnet"
+        usersFile: "/etc/traefik/auth/.users.htpasswd"
+
+  routers:
+{% for name, svc in services.items() if svc.web is defined %}
+    {{ name }}:
+      rule: "Host(`{{ svc.host }}.{{ domain }}`)"
+      service: {{ name }}
+      entryPoints:
+        - websecure
+{% if svc.web.tls | default(true) %}
+      tls:
+        certResolver: cloudflare
+{% endif %}
+{% if svc.web.middlewares is defined %}
+      middlewares:
+{% for m in svc.web.middlewares %}
+        - {{ m }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+    dashboard:
+      rule: "Host(`traefik.{{ domain }}`)"
+      service: api@internal
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: cloudflare
+      middlewares:
+        - dbnet-auth
+
+  services:
+{% for name, svc in services.items() if svc.web is defined %}
+    {{ name }}:
+      loadBalancer:
+        servers:
+          - url: "{{ svc.web.scheme | default('http') }}://{{ svc.web.target }}:{{ svc.web.port }}"
+        passHostHeader: true
+{% if svc.web.insecure | default(false) %}
+        serversTransport: insecure
+{% endif %}
+{% endfor %}

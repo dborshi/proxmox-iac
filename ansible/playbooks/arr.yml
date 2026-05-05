@@ -3,4 +3,4 @@
   hosts: arr
   become: true
   roles:
-    - docker
+    - arr-stack

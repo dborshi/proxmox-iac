@@ -1,0 +1,73 @@
+- name: Get Cloudflare API token from Bitwarden
+  ansible.builtin.set_fact:
+    proxy_cf_api_token: "{{ lookup('bitwarden.secrets.lookup', bw_cf_api_token, base_url='https://vault.bitwarden.eu') }}"
+  no_log: true
+
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - wget
+      - apache2-utils
+    state: present
+    update_cache: true
+
+- name: Get latest Traefik version from GitHub
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/traefik/traefik/releases/latest
+    return_content: true
+  register: proxy_traefik_release
+
+- name: Set Traefik version fact
+  ansible.builtin.set_fact:
+    proxy_traefik_version: "{{ proxy_traefik_release.json.tag_name | regex_replace('^v', '') }}"
+
+- name: Download Traefik binary archive
+  ansible.builtin.get_url:
+    url: "https://github.com/traefik/traefik/releases/download/v{{ proxy_traefik_version }}/traefik_v{{ proxy_traefik_version }}_linux_amd64.tar.gz"
+    dest: /tmp/traefik.tar.gz
+    mode: '0644'
+
+- name: Extract Traefik binary
+  ansible.builtin.unarchive:
+    src: /tmp/traefik.tar.gz
+    dest: /usr/local/bin/
+    remote_src: true
+    include:
+      - traefik
+
+- name: Set Traefik binary permissions
+  ansible.builtin.file:
+    path: /usr/local/bin/traefik
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Create Traefik directory structure
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - /etc/traefik
+    - /etc/traefik/auth
+    - /var/log/traefik
+
+- name: Create ACME storage file
+  ansible.builtin.file:
+    path: /etc/traefik/acme.json
+    state: touch
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Install systemd service
+  ansible.builtin.template:
+    src: traefik.service.j2
+    dest: /etc/systemd/system/traefik.service
+    mode: '0644'
+  notify:
+    - Reload systemd
+    - Restart Traefik

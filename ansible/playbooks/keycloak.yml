@@ -1,0 +1,8 @@
+---
+- name: Install Keycloak on LXC
+  hosts: keycloak_lxc
+  become: true
+
+  roles:
+    - role: docker_setup
+    - role: keycloak

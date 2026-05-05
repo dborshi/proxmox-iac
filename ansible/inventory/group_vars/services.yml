@@ -1,0 +1,109 @@
+domain: dbnet.work
+
+services:
+  proxy:
+    host: proxy
+    dns:
+      ip: 10.0.0.20
+
+  piholepi:
+    host: piholepi
+    dns:
+      ip: 10.0.0.5
+
+  pihole:
+    host: pihole
+    dns:
+      ip: 10.0.0.22
+
+  proxmox:
+    host: proxmox
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.10
+      port: 8006
+      scheme: https
+      insecure: true
+
+  pbs:
+    host: backup
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.11
+      port: 8007
+      scheme: https
+      insecure: true
+
+  immich:
+    host: immich
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.50
+      port: 2283
+
+  opencloud:
+    host: cloud
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.51
+      port: 8080
+  
+  prowlarr:
+    host: prowlarr
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.55
+      port: 9696
+
+  radarr:
+    host: radarr
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.55
+      port: 7878
+
+  sonarr:
+    host: sonarr
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.55
+      port: 8989
+
+  qbittorrent:
+    host: qbittorrent
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.55
+      port: 8080
+
+  jellyfin:
+    host: jellyfin
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.55
+      port: 8096
+
+  flaresolverr:
+    host: flaresolverr
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.55
+      port: 8191
+
+  seer:
+    host: seer
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.55
+      port: 5055
