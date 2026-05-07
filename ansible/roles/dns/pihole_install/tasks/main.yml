@@ -1,0 +1,74 @@
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - git
+      - libcap2-bin
+    state: present
+    update_cache: true
+
+- name: Set temporary nameserver for installation
+  ansible.builtin.copy:
+    content: "nameserver 8.8.8.8\n"
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create Pi-hole config directory
+  ansible.builtin.file:
+    path: /etc/pihole
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy Pi-hole unattended install config
+  ansible.builtin.template:
+    src: setupVars.conf.j2
+    dest: /etc/pihole/setupVars.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Download Pi-hole installer
+  ansible.builtin.get_url:
+    url: https://install.pi-hole.net
+    dest: /tmp/pihole-install.sh
+    mode: '0755'
+
+- name: Run Pi-hole unattended installer
+  ansible.builtin.command: bash /tmp/pihole-install.sh --unattended
+  args:
+    creates: /usr/local/bin/pihole
+  environment:
+    PIHOLE_SKIP_OS_CHECK: "true"
+
+- name: Set static resolv.conf pointing to localhost
+  ansible.builtin.copy:
+    content: "nameserver 127.0.0.1\n"
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Set Pi-hole admin password
+  ansible.builtin.command: /usr/local/bin/pihole -a -p "{{ lookup('bitwarden.secrets.lookup', bw_pihole_password, base_url='https://vault.bitwarden.eu') }}"
+  no_log: true
+  changed_when: true
+
+- name: Ensure pihole-FTL is enabled and started
+  ansible.builtin.systemd:
+    name: pihole-FTL
+    enabled: true
+    state: started
+
+- name: Ensure /usr/local/bin is in PATH
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    regexp: '^PATH='
+    line: 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"'
+
+- name: Restart Pi-hole DNS
+  ansible.builtin.command: /usr/local/bin/pihole restartdns
+  changed_when: true

@@ -77,7 +77,7 @@ services:
       port: 8989
 
   qbittorrent:
-    host: qbittorrent
+    host: qbit
     dns:
       cname: proxy
     web:

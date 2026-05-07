@@ -1,13 +1,10 @@
----
 # Unbound must run first — Pi-hole needs the upstream ready at install time
-- name: Configure Unbound on dns LXC
+- name: Configure dns LXC
   hosts: dns
   become: true
   roles:
-    - unbound
-
-- name: Configure Pi-hole on dns LXC
-  hosts: dns
-  become: true
-  roles:
-    - pihole
+    #- role: dns/unbound
+    #- role: dns/pihole_install
+    - role: dns/pihole_config
+  vars_files:
+    - group_vars/services.yml

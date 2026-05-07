@@ -1,0 +1,38 @@
+- name: Initialize DNS lists
+  ansible.builtin.set_fact:
+    dns_pihole_hosts: []
+    dns_pihole_cnames: []
+
+- name: Build A records
+  ansible.builtin.set_fact:
+    dns_pihole_hosts: "{{ dns_pihole_hosts | default([]) + [ svc.dns.ip ~ ' ' ~ svc.host ~ '.' ~ domain ] }}"
+  loop: "{{ services.values() }}"
+  loop_control:
+    loop_var: svc
+  when:
+    - svc.dns is defined
+    - svc.dns.ip is defined
+
+- name: Build CNAME records
+  ansible.builtin.set_fact:
+    dns_pihole_cnames: "{{ dns_pihole_cnames | default([]) + [ svc.host ~ '.' ~ domain ~ ',' ~ svc.dns.cname ~ '.' ~ domain ] }}"
+  loop: "{{ services.values() }}"
+  loop_control:
+    loop_var: svc
+  when:
+    - svc.dns is defined
+    - svc.dns.cname is defined
+
+- name: Apply A records
+  ansible.builtin.command:
+    cmd: >
+      pihole-FTL --config dns.hosts '{{ dns_pihole_hosts | to_json }}'
+  notify: Restart pihole dns
+  changed_when: true
+
+- name: Apply CNAME records
+  ansible.builtin.command:
+    cmd: >
+      pihole-FTL --config dns.cnameRecords '{{ dns_pihole_cnames | to_json }}'
+  notify: Restart pihole dns
+  changed_when: true
