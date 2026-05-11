@@ -1,0 +1,7 @@
+- name: Install Forgejo on LXC
+  hosts: forg-run
+  become: true
+
+  roles:
+    - role: docker_setup
+    - role: forgejo_runner

@@ -1,0 +1,26 @@
+services:
+  docker-in-docker:
+    image: docker:dind
+    container_name: 'docker_dind'
+    privileged: 'true'
+    command: ['dockerd', '-H', 'tcp://0.0.0.0:2375', '--tls=false']
+    restart: 'unless-stopped'
+
+  runner:
+    image: 'data.forgejo.org/forgejo/runner:12'
+    links:
+      - docker-in-docker
+    depends_on:
+      docker-in-docker:
+        condition: service_started
+    container_name: 'runner'
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data
+    restart: 'unless-stopped'
+        # Register once before first run:
+    # docker compose run --rm --entrypoint sh runner
+    # > forgejo-runner generate-config > /data/config.yml
+    # add uuid token and server url to config.yml, then start the stack
+    command: 'forgejo-runner daemon --config runner-config.yml'
