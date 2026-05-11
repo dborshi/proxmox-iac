@@ -1,0 +1,20 @@
+---
+- name: Provision Forgejo database
+  hosts: postgres
+  tasks:
+    - name: Provision forgejo db
+      ansible.builtin.include_role:
+        name: postgres
+        tasks_from: db_provision.yml
+      vars:
+        pg_user: forgejo
+        pg_password: "{{ lookup('bitwarden.secrets.lookup', bw_forgejo_db_password, base_url='https://vault.bitwarden.eu') }}"
+        pg_db: forgejo
+
+- name: Install Forgejo on LXC
+  hosts: forgejo
+  become: true
+
+  roles:
+    - role: docker_setup
+    - role: forgejo

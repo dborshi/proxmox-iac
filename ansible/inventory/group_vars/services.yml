@@ -16,6 +16,11 @@ services:
     dns:
       ip: 10.0.0.22
 
+  dashboard:
+    host: traefik
+    dns:
+      cname: proxy
+
   proxmox:
     host: proxmox
     dns:
@@ -35,6 +40,14 @@ services:
       port: 8007
       scheme: https
       insecure: true
+
+  keycloak:
+    host: auth
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.19
+      port: 8080
 
   immich:
     host: immich
@@ -107,3 +120,11 @@ services:
     web:
       target: 10.0.0.55
       port: 5055
+
+  forjeho:
+    host: git
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.32
+      port: 3000

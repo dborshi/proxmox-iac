@@ -1,0 +1,4 @@
+forgejo_db_host: 10.0.0.15:5432
+forgejo_db_name: forgejo
+forgejo_db_user: forgejo
+forgejo_db_password: "{{ lookup('bitwarden.secrets.lookup', bw_forgejo_db_password, base_url='https://vault.bitwarden.eu') }}"

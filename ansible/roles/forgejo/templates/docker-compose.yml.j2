@@ -1,0 +1,20 @@
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:15-rootless
+    container_name: forgejo
+    user: "1000:1000"
+    restart: always
+
+    env_file:
+      - .env
+
+    environment:
+      - FORGEJO__database__DB_TYPE=postgres
+      - TZ=Europe/Tirane
+
+    volumes:
+      - /opt/appdata/forgejo:/var/lib/gitea
+
+    ports:
+      - "3000:3000"
+      - "222:2222"

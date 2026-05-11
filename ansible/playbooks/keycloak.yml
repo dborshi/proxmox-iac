@@ -1,6 +1,18 @@
 ---
+- name: Provision Keycloak database
+  hosts: postgres
+  tasks:
+    - name: Provision key db
+      ansible.builtin.include_role:
+        name: postgres
+        tasks_from: db_provision.yml
+      vars:
+        pg_user: keycloak
+        pg_password: "{{ lookup('bitwarden.secrets.lookup', bw_keycloak_db_password, base_url='https://vault.bitwarden.eu') }}"
+        pg_db: keycloak
+
 - name: Install Keycloak on LXC
-  hosts: keycloak_lxc
+  hosts: keycloak
   become: true
 
   roles:

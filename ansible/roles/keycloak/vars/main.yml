@@ -1,7 +1,7 @@
-kc_db_host: localhost
-kc_db_name: keycloak
-kc_db_user: keycloak
-kc_db_password: changeme
-kc_hostname: keycloak.example.com
-kc_admin_user: admin
-kc_admin_password: changeme
+keycloak_db_host: 10.0.0.15
+keycloak_db_name: keycloak
+keycloak_db_user: keycloak
+keycloak_db_password: "{{ lookup('bitwarden.secrets.lookup', bw_keycloak_db_password, base_url='https://vault.bitwarden.eu') }}"
+keycloak_hostname: auth.dbnet.work
+keycloak_admin_user: admin
+keycloak_admin_password: "{{ lookup('bitwarden.secrets.lookup', bw_keycloak_admin_password, base_url='https://vault.bitwarden.eu') }}"

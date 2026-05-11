@@ -1,6 +1,6 @@
-resource "proxmox_virtual_environment_container" "authentik_lxc" {
+resource "proxmox_virtual_environment_container" "forgejo_lxc" {
   node_name     = "proxmox"
-  vm_id         = 119
+  vm_id         = 132
   unprivileged  = true
   start_on_boot = false
   protection    = true
@@ -13,11 +13,11 @@ resource "proxmox_virtual_environment_container" "authentik_lxc" {
 
 
   initialization {
-    hostname = "authentik"
+    hostname = "forgejo"
 
     ip_config {
       ipv4 {
-        address = "10.0.0.19/24"
+        address = "10.0.0.32/24"
         gateway = "10.0.0.1"
       }
     }
@@ -29,11 +29,11 @@ resource "proxmox_virtual_environment_container" "authentik_lxc" {
   }
 
   cpu {
-    cores = 2
+    cores = 1
   }
 
   memory {
-    dedicated = 4096
+    dedicated = 1024
     swap      = 512
   }
 
@@ -44,7 +44,7 @@ resource "proxmox_virtual_environment_container" "authentik_lxc" {
 
   disk {
     datastore_id = "local-zfs"
-    size         = 32
+    size         = 16
   }
 
   operating_system {

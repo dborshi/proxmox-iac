@@ -2,9 +2,9 @@
 - name: Configure dns LXC
   hosts: dns
   become: true
-  roles:
-    #- role: dns/unbound
-    #- role: dns/pihole_install
-    - role: dns/pihole_config
   vars_files:
     - group_vars/services.yml
+  roles:
+    - role: dns/unbound
+    - role: dns/pihole_install
+    - role: dns/pihole_config

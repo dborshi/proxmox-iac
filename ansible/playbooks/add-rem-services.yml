@@ -1,0 +1,17 @@
+- name: Configure proxy LXC
+  hosts: proxy
+  become: true
+  vars_files:
+    - group_vars/services.yml
+  roles:
+    - role: proxy/traefik_config
+
+- name: Configure dns LXC
+  hosts: 
+    - dns
+    - raspi
+  become: true
+  vars_files:
+    - group_vars/services.yml
+  roles:
+    - role: dns/pihole_config
