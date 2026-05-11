@@ -1,4 +1,3 @@
----
 - name: Provision Forgejo database
   hosts: postgres
   tasks:

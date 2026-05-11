@@ -1,4 +1,3 @@
----
 - name: Configure Proxmox host
   hosts: proxmox
   remote_user: db

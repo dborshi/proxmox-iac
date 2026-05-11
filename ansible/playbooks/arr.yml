@@ -1,6 +1,6 @@
----
 - name: Configure arr VM
   hosts: arr
   become: true
   roles:
-    - arr-stack
+    - role: docker_setup
+    - role: arr-stack

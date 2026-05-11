@@ -1,4 +1,3 @@
----
 - name: Configure proxy LXC
   hosts: proxy
   become: true
@@ -7,4 +6,3 @@
   roles:
     - role: proxy/traefik_install
     - role: proxy/traefik_config
-

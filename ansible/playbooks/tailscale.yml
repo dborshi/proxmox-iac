@@ -1,4 +1,3 @@
----
 - name: Configure Proxmox host for Tailscale LXC
   hosts: proxmox
   tasks:

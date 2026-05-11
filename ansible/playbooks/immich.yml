@@ -1,4 +1,3 @@
----
 - name: Configure Immich
   hosts: immich 
   become: true

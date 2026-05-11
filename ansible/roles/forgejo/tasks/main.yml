@@ -20,6 +20,7 @@
     src: docker-compose.yml.j2
     dest: "/opt/appdata/forgejo/docker-compose.yml"
     mode: "0640"
+  notify: Restart stack
 
 - name: Start Forgejo stack
   community.docker.docker_compose_v2:
