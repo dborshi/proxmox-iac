@@ -121,7 +121,7 @@ services:
       target: 10.0.0.55
       port: 5055
 
-  forjeho:
+  forgejo:
     host: git
     dns:
       cname: proxy
