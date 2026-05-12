@@ -19,7 +19,7 @@ jobs:
       - name: Install jq
         run: |
           apt-get update
-          apt-get install -y jq
+          apt-get install -y jq python3-pip
 
       - name: Get changed roles as JSON array
         id: diff
