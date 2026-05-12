@@ -8,7 +8,7 @@ on:
 jobs:
 
   detect:
-    runs-on: ubuntu-latest
+    runs-on: docker
     outputs:
       changed_roles: ${{ steps.diff.outputs.roles }}
     steps:
@@ -33,7 +33,7 @@ jobs:
     strategy:
       matrix:
         role: ${{ fromJson(needs.detect.outputs.changed_roles) }}
-      fail-fast: false              # other roles keep running if one fails
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v4
@@ -41,10 +41,10 @@ jobs:
       - name: Install Ansible
         run: pip install ansible
 
-      - name: Write SSH key
+      - name: Start SSH agent
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/id_rsa
-          chmod 600 /tmp/id_rsa
+          eval "$(ssh-agent -s)"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
 
       - name: Read target hosts from role meta
         id: hosts
@@ -68,5 +68,4 @@ jobs:
               - role: ${{ matrix.role }}
           EOF
           ansible-playbook /tmp/playbook.yml \
-            -i ansible/inventory/hosts.yml \
-            --private-key /tmp/id_rsa
+            -i ansible/inventory/hosts.yml
