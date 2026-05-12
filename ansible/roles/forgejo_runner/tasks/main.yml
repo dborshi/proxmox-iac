@@ -1,3 +1,15 @@
+- name: Install dependencies
+  ansible.builtin.apt:
+    name:
+      - git
+      - jq
+      - python3
+      - pip
+      - ansible
+      - openssh-client
+    state: present
+    update_cache: true
+
 - name: Create Forgejo runner data directory
   ansible.builtin.file:
     path: /opt/forgejo-runner/data
