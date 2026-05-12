@@ -16,6 +16,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install jq
+        run: |
+          apt-get update
+          apt-get install -y jq
+
       - name: Get changed roles as JSON array
         id: diff
         run: |
