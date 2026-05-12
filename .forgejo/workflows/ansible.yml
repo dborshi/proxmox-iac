@@ -34,7 +34,7 @@ jobs:
   deploy:
     needs: detect
     if: needs.detect.outputs.changed_roles != '[]'
-    runs-on: ubuntu-latest
+    runs-on: docker
     strategy:
       matrix:
         role: ${{ fromJson(needs.detect.outputs.changed_roles) }}
