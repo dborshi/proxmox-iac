@@ -61,4 +61,3 @@
   loop:
     - "{{ image_zst }}"
     - "{{ image_raw }}"
-
