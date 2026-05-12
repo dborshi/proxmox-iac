@@ -1,0 +1,72 @@
+name: Run changed Ansible roles
+
+on:
+  push:
+    paths:
+      - 'ansible/roles/**'
+
+jobs:
+
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      changed_roles: ${{ steps.diff.outputs.roles }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed roles as JSON array
+        id: diff
+        run: |
+          ROLES=$(git diff --name-only HEAD~1 HEAD \
+            | grep '^ansible/roles/' \
+            | awk -F'/' '{print $3}' \
+            | sort -u | jq -R . | jq -sc .)
+          echo "roles=$ROLES" >> $GITHUB_OUTPUT
+          echo "Detected: $ROLES"
+
+  deploy:
+    needs: detect
+    if: needs.detect.outputs.changed_roles != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        role: ${{ fromJson(needs.detect.outputs.changed_roles) }}
+      fail-fast: false              # other roles keep running if one fails
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: pip install ansible
+
+      - name: Write SSH key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/id_rsa
+          chmod 600 /tmp/id_rsa
+
+      - name: Read target hosts from role meta
+        id: hosts
+        run: |
+          META="ansible/roles/${{ matrix.role }}/meta/hosts.yml"
+          TARGET=$(python3 -c "
+          import yaml
+          with open('$META') as f:
+            print(yaml.safe_load(f).get('target_hosts','all'))
+          ")
+          echo "target=$TARGET" >> $GITHUB_OUTPUT
+
+      - name: Run role
+        run: |
+          cat > /tmp/playbook.yml <<EOF
+          ---
+          - name: Apply ${{ matrix.role }}
+            hosts: ${{ steps.hosts.outputs.target }}
+            become: true
+            roles:
+              - role: ${{ matrix.role }}
+          EOF
+          ansible-playbook /tmp/playbook.yml \
+            -i ansible/inventory/hosts.yml \
+            --private-key /tmp/id_rsa

@@ -1,0 +1,63 @@
+- name: Download Talos raw image (compressed)
+  ansible.builtin.get_url:
+    url: "{{ image_url }}"
+    dest: "{{ image_zst }}"
+    mode: "0644"
+    force: false
+
+- name: Install zstd if missing
+  ansible.builtin.apt:
+    name: zstd
+    state: present
+    update_cache: true
+
+- name: Decompress image
+  ansible.builtin.command: "zstd -d {{ image_zst }} -o {{ image_raw }}"
+  args:
+    creates: "{{ image_raw }}"
+
+- name: Check if VM exists
+  ansible.builtin.command: qm status {{ vmid }}
+  register: vm_exists
+  failed_when: false
+
+- name: Destroy VM if exists
+  ansible.builtin.command: qm destroy {{ vmid }}
+  when: vm_exists.rc == 0
+
+- name: Create VM
+  ansible.builtin.command: >
+    qm create {{ vmid }}
+    --name talos-template
+    --memory 4096
+    --cores 2
+        --net0 virtio,bridge=vmbr0
+        --ostype l26
+
+- name: Import disk into Proxmox storage
+  ansible.builtin.command: >
+    qm importdisk {{ vmid }} {{ image_raw }} {{ storage }}
+  failed_when: false
+
+- name: Attach disk to VM
+  ansible.builtin.command: >
+    qm set {{ vmid }}
+    --scsihw virtio-scsi-pci
+    --scsi0 {{ storage }}:vm-{{ vmid }}-disk-0
+
+- name: Set boot order
+  ansible.builtin.command: qm set {{ vmid }} --boot c --bootdisk scsi0
+
+- name: Enable serial console (required for Talos)
+  ansible.builtin.command: qm set {{ vmid }} --serial0 socket --vga serial0
+
+- name: Convert VM to template
+  ansible.builtin.command: qm template {{ vmid }}
+
+- name: Cleanup
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ image_zst }}"
+    - "{{ image_raw }}"
