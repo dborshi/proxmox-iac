@@ -77,4 +77,5 @@ jobs:
               - role: ${{ matrix.role }}
           EOF
           ansible-playbook /tmp/playbook.yml \
-            -i ansible/inventory/hosts.ini
+            -i ansible/inventory/hosts.ini \
+            --roles-path /workspace/dborshi/proxmox-iac/ansible/roles
