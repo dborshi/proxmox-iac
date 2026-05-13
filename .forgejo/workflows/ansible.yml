@@ -51,11 +51,19 @@ jobs:
         id: hosts
         run: |
           META="ansible/roles/${{ matrix.role }}/meta/hosts.yml"
-          TARGET=$(python3 -c "
-          import yaml
-          with open('$META') as f:
-            print(yaml.safe_load(f).get('target_hosts','all'))
-          ")
+
+          if [ ! -f "$META" ]; then
+            echo "ERROR: missing meta file $META"
+            exit 1
+          fi
+
+          TARGET=$(awk -F': ' '/target_hosts/ {print $2}' "$META")
+
+          if [ -z "$TARGET" ]; then
+            echo "ERROR: target_hosts is empty for role ${{ matrix.role }}"
+            exit 1
+          fi
+
           echo "target=$TARGET" >> $GITHUB_OUTPUT
 
       - name: Run role
