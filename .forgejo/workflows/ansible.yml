@@ -11,8 +11,10 @@ jobs:
     runs-on: docker
     container:
       image: git.dbnet.work/dborshi/ansible-runner:latest
+
     outputs:
       changed_roles: ${{ steps.diff.outputs.roles }}
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,12 +23,27 @@ jobs:
       - name: Get changed roles as JSON array
         id: diff
         run: |
-          ROLES=$(git diff --name-only HEAD~1 HEAD \
-            | grep '^ansible/roles/' \
+          set -e
+
+          BASE="${{ github.event.before }}"
+          HEAD="${{ github.sha }}"
+
+          # Handle first commit or invalid SHAs
+          if [ "$BASE" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "$BASE"^{commit} 2>/dev/null; then
+            BASE=$(git rev-list --max-parents=0 HEAD)
+          fi
+
+          ROLES=$(git diff --name-only "$BASE" "$HEAD" \
+            | grep '^ansible/roles/' || true \
             | awk -F'/' '{print $3}' \
-            | sort -u | jq -R . | jq -sc .)
+            | sort -u \
+            | jq -R . \
+            | jq -s .)
+
           echo "roles=$ROLES" >> $GITHUB_OUTPUT
           echo "Detected: $ROLES"
+
 
   deploy:
     needs: detect
@@ -34,6 +51,7 @@ jobs:
     runs-on: docker
     container:
       image: git.dbnet.work/dborshi/ansible-runner:latest
+
     strategy:
       matrix:
         role: ${{ fromJson(needs.detect.outputs.changed_roles) }}
@@ -46,10 +64,13 @@ jobs:
         run: |
           eval "$(ssh-agent -s)"
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
+          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
 
       - name: Read target hosts from role meta
         id: hosts
         run: |
+          set -e
+
           META="ansible/roles/${{ matrix.role }}/meta/hosts.yml"
 
           if [ ! -f "$META" ]; then
@@ -57,7 +78,7 @@ jobs:
             exit 1
           fi
 
-          TARGET=$(awk -F': ' '/target_hosts/ {print $2}' "$META")
+          TARGET=$(grep -E '^target_hosts:' "$META" | awk '{print $2}')
 
           if [ -z "$TARGET" ]; then
             echo "ERROR: target_hosts is empty for role ${{ matrix.role }}"
@@ -76,6 +97,6 @@ jobs:
             roles:
               - role: ${{ matrix.role }}
           EOF
+
           ansible-playbook /tmp/playbook.yml \
-            -i ansible/inventory/hosts.ini \
-            --roles-path /workspace/dborshi/proxmox-iac/ansible/roles
+            -i ansible/inventory/hosts.ini
