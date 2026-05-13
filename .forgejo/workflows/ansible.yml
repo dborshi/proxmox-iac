@@ -11,7 +11,6 @@ jobs:
     runs-on: docker
     container:
       image: git.dbnet.work/dborshi/ansible-runner:latest
-      options: --pull=always
     outputs:
       changed_roles: ${{ steps.diff.outputs.roles }}
     steps:
@@ -35,7 +34,6 @@ jobs:
     runs-on: docker
     container:
       image: git.dbnet.work/dborshi/ansible-runner:latest
-      options: --pull=always
     strategy:
       matrix:
         role: ${{ fromJson(needs.detect.outputs.changed_roles) }}
