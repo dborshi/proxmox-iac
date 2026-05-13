@@ -77,4 +77,4 @@ jobs:
               - role: ${{ matrix.role }}
           EOF
           ansible-playbook /tmp/playbook.yml \
-            -i ansible/inventory/hosts.yml
+            -i ansible/inventory/hosts.ini
