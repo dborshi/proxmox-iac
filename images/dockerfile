@@ -1,0 +1,53 @@
+FROM python:3.12-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    unzip \
+    openssh-client \
+    sshpass \
+    rsync \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    jq \
+    yq \
+    make \
+    gcc \
+    vim \
+    nano \
+    docker.io \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python tools
+RUN pip install --no-cache-dir \
+    ansible \
+    ansible-lint \
+    molecule \
+    jmespath \
+    netaddr \
+    passlib \
+    requests \
+    docker \
+    hvac
+
+# Terraform
+RUN wget https://releases.hashicorp.com/terraform/1.12.2/terraform_1.12.2_linux_amd64.zip && \
+    unzip terraform_1.12.2_linux_amd64.zip && \
+    mv terraform /usr/local/bin/ && \
+    rm terraform_1.12.2_linux_amd64.zip
+
+# kubectl
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+    install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl && \
+    rm kubectl
+
+# talosctl
+RUN curl -sL https://talos.dev/install | sh
+
+WORKDIR /workspace
+
+CMD ["bash"]

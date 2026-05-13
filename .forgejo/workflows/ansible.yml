@@ -9,6 +9,8 @@ jobs:
 
   detect:
     runs-on: docker
+    container:
+      image: git.dbnet.work/dborshi/ansible-runner:latest
     outputs:
       changed_roles: ${{ steps.diff.outputs.roles }}
     steps:
@@ -35,6 +37,8 @@ jobs:
     needs: detect
     if: needs.detect.outputs.changed_roles != '[]'
     runs-on: docker
+    container:
+      image: git.dbnet.work/dborshi/ansible-runner:latest
     strategy:
       matrix:
         role: ${{ fromJson(needs.detect.outputs.changed_roles) }}
