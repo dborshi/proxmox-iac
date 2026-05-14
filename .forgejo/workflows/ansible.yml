@@ -119,4 +119,5 @@ jobs:
 
           ansible-playbook /tmp/playbook.yml \
             -i ansible/inventory/hosts.ini \
+            --vault-password-file /tmp/.vault_pass \
             --diff
