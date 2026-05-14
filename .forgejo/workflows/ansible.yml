@@ -8,6 +8,8 @@ on:
 jobs:
   detect:
     runs-on: docker
+    container:
+      image: git.dbnet.work/dborshi/ansible-runner:latest
     outputs:
       changed_roles: ${{ steps.extract.outputs.roles }}
     steps:
