@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: dorny/paths-filter@v4.0.1
+      - uses: git.dbnet.work/your-org/paths-filter@v4.0.1
         id: filter
         with:
           list-files: json
