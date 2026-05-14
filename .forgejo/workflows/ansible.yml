@@ -88,6 +88,7 @@ jobs:
         env:
           ROLE: ${{ matrix.role }}
           TARGET: ${{ steps.hosts.outputs.target }}
+          ANSIBLE_ROLES_PATH: ansible/roles
         run: |
           printf '%s\n' \
             '---' \
