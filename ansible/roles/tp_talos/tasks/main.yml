@@ -48,7 +48,7 @@
 - name: Set boot order
   ansible.builtin.command: qm set {{ vmid }} --boot c --bootdisk scsi0
 
-- name: Enable serial console (required for Talos)
+- name: Enable serial console
   ansible.builtin.command: qm set {{ vmid }} --serial0 socket --vga serial0
 
 - name: Convert VM to template
