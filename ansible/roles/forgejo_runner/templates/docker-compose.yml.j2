@@ -23,4 +23,4 @@ services:
     # docker compose run --rm --entrypoint sh runner
     # > forgejo-runner generate-config > /data/config.yml
     # add uuid token and server url to config.yml, then start the stack
-    command: 'forgejo-runner daemon --config runner-config.yml'
+    command: 'forgejo-runner daemon --config /data/config.yml'
