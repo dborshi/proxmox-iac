@@ -39,6 +39,14 @@ jobs:
             echo "roles=$ROLES" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Debug changed files
+        run: |
+          echo '${{ steps.filter.outputs.roles_files }}' | jq .
+
+      - name: Debug changed roles
+        run: |
+          echo '${{ steps.extract.outputs.roles }}'
+
   deploy:
     needs: detect
     if: needs.detect.outputs.changed_roles != '[]'
