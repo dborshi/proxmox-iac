@@ -34,7 +34,7 @@ jobs:
           if [ "$FILES" = "[]" ] || [ -z "$FILES" ]; then
             echo "roles=[]" >> "$GITHUB_OUTPUT"
           else
-            ROLES=$(echo "$FILES" | jq '[.[] | split("/") | .[2]] | unique')
+            ROLES=$(echo "$FILES" | jq -c '[.[] | split("/") | .[2]] | unique')
             echo "$ROLES" | jq empty
             echo "roles=$ROLES" >> "$GITHUB_OUTPUT"
           fi
