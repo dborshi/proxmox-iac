@@ -34,13 +34,17 @@ RUN pip install --no-cache-dir \
     passlib \
     requests \
     docker \
-    hvac
+    hvac \
+    bitwarden-sdk
 
 # Terraform
 RUN wget https://releases.hashicorp.com/terraform/1.12.2/terraform_1.12.2_linux_amd64.zip && \
     unzip terraform_1.12.2_linux_amd64.zip && \
     mv terraform /usr/local/bin/ && \
     rm terraform_1.12.2_linux_amd64.zip
+
+# Ansible Collection
+RUN ansible-galaxy collection install community.general
 
 # kubectl
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
