@@ -97,7 +97,15 @@ jobs:
           ROLE: ${{ matrix.role }}
           TARGET: ${{ steps.hosts.outputs.target }}
           ANSIBLE_ROLES_PATH: ansible/roles
+          BWS_ACCESS_TOKEN: ${{ secrets.BW_ACCESS_TOKEN }}
+          BW_ACCESS_TOKEN: ${{ secrets.BW_ACCESS_TOKEN }}
+          ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
         run: |
+          set -euo pipefail
+
+          echo "$ANSIBLE_VAULT_PASSWORD" > /tmp/.vault_pass
+          chmod 600 /tmp/.vault_pass
+
           printf '%s\n' \
             '---' \
             "- name: Apply role $ROLE" \
