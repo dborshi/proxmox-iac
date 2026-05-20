@@ -45,6 +45,7 @@ RUN wget https://releases.hashicorp.com/terraform/1.12.2/terraform_1.12.2_linux_
 
 # Ansible Collection
 RUN ansible-galaxy collection install community.general
+RUN ansible-galaxy collection install bitwarden.secrets
 
 # kubectl
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
