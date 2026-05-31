@@ -1,0 +1,17 @@
+- name: Infrastructure entrypoint
+  hosts: all
+  become: true
+
+  roles:
+
+    - role: dns
+      tags: [dns]
+
+    - role: proxy
+      tags: [proxy]
+
+    - role: talos_template
+      tags: [talos_template]
+
+    - role: cleanup
+      tags: [cleanup]

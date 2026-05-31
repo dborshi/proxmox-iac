@@ -1,0 +1,76 @@
+version: '3'
+
+tasks:
+  # ── Terraform ──────────────────────────────────────────
+  tf:init:
+    desc: Initialize Terraform
+    dir: terraform
+    cmds: [terraform init]
+
+  tf:plan:
+    desc: Plan VM provisioning
+    dir: terraform
+    cmds: [terraform plan]
+
+  tf:apply:
+    desc: Create the 3 VMs on Proxmox
+    dir: terraform
+    cmds: [terraform apply -auto-approve]
+
+  tf:destroy:
+    desc: Destroy all VMs
+    dir: terraform
+    cmds: [terraform destroy -auto-approve]
+
+  # ── Talos config ───────────────────────────────────────
+  talos:gensecret:
+    desc: Generate + encrypt cluster secrets
+    dir: talos
+    cmds:
+      - talhelper gensecret > talsecret.sops.yaml
+      - sops -e -i talsecret.sops.yaml
+
+  talos:genconfig:
+    desc: Generate all node configs from talconfig.yaml
+    dir: talos
+    cmds: [talhelper genconfig]
+
+  # ── Bootstrap ──────────────────────────────────────────
+  talos:apply-cp:
+    desc: Apply config to control plane node
+    dir: talos
+    cmds:
+      - talosctl apply-config --insecure --nodes 10.0.0.41
+          --file clusterconfig/dbnet-talos-cp-1.yaml
+
+  talos:apply-workers:
+    desc: Apply config to worker nodes
+    dir: talos
+    cmds:
+      - talosctl apply-config --insecure --nodes 10.0.0.42
+          --file clusterconfig/dbnet-talos-wk-1.yaml
+      - talosctl apply-config --insecure --nodes 10.0.0.43
+          --file clusterconfig/dbnet-talos-wk-2.yaml
+
+  talos:bootstrap:
+    desc: Bootstrap etcd on the control plane (run ONCE)
+    cmds:
+      - talosctl bootstrap --nodes 10.0.0.41
+          --talosconfig talos/clusterconfig/talosconfig
+
+  talos:kubeconfig:
+    desc: Fetch kubeconfig
+    cmds:
+      - talosctl kubeconfig --nodes 10.0.0.41
+          --talosconfig talos/clusterconfig/talosconfig
+
+  # ── Full bring-up sequence ─────────────────────────────
+  up:
+    desc: Full cluster bootstrap from scratch
+    cmds:
+      - task: tf:apply
+      - task: talos:genconfig
+      - task: talos:apply-cp
+      - task: talos:apply-workers
+      - task: talos:bootstrap
+      - task: talos:kubeconfig
