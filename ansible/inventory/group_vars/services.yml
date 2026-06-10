@@ -57,13 +57,13 @@ services:
       target: 10.0.0.50
       port: 2283
 
-  opencloud:
+  owncloud:
     host: cloud
     dns:
       cname: proxy
     web:
-      target: 10.0.0.51
-      port: 8080
+      target: 10.0.0.202
+      port: 30740
   
   prowlarr:
     host: prowlarr

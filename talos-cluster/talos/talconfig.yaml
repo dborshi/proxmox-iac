@@ -1,0 +1,43 @@
+clusterName: dbnet
+talosVersion: v1.12.6
+kubernetesVersion: v1.35.3
+endpoint: https://10.0.0.41:6443
+
+nodes:
+  - hostname: talos-cp-1
+    ipAddress: 10.0.0.41
+    installDisk: /dev/sda
+    controlPlane: true
+    networkInterfaces:
+      - interface: eth0
+        dhcp: false
+        addresses: [10.0.0.41/24]
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.0.0.1
+        #vip:
+        #  ip: 10.0.0.40
+
+  - hostname: talos-wk-1
+    ipAddress: 10.0.0.42
+    installDisk: /dev/sda
+    controlPlane: false
+    networkInterfaces:
+      - interface: eth0
+        dhcp: false
+        addresses: [10.0.0.42/24]
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.0.0.1
+
+  - hostname: talos-wk-2
+    ipAddress: 10.0.0.43
+    installDisk: /dev/sda
+    controlPlane: false
+    networkInterfaces:
+      - interface: eth0
+        dhcp: false
+        addresses: [10.0.0.43/24]
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.0.0.1
