@@ -1,5 +1,5 @@
 vmid: 9000
 storage: local-zfs
-image_url: "https://factory.talos.dev/image/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba/v1.13.1/metal-amd64.raw.zst"
+image_url: "https://factory.talos.dev/image/ec93f8265961b559196b050b169fae360ae170251173569260c66c7eb8b38109/v1.13.4/nocloud-amd64.raw.xz"
 image_zst: "/tmp/metal-amd64.raw.zst"
 image_raw: "/tmp/metal-amd64.raw"

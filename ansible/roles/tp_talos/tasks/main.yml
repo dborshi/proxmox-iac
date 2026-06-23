@@ -31,22 +31,26 @@
     --name talos-template
     --memory 4096
     --cores 2
-        --net0 virtio,bridge=vmbr0
-        --ostype l26
+    --cpu host
+    --machine q35
+    --net0 virtio,bridge=vmbr0
+    --ostype l26
 
 - name: Import disk into Proxmox storage
   ansible.builtin.command: >
     qm importdisk {{ vmid }} {{ image_raw }} {{ storage }}
-  failed_when: false
 
 - name: Attach disk to VM
   ansible.builtin.command: >
     qm set {{ vmid }}
-    --scsihw virtio-scsi-pci
-    --scsi0 {{ storage }}:vm-{{ vmid }}-disk-0
+    --scsihw virtio-scsi-single
+    --scsi0 {{ storage }}:vm-{{ vmid }}-disk-0,iothread=1,ssd=1,discard=on
+
+- name: Enable QEMU agent
+  ansible.builtin.command: qm set {{ vmid }} --agent enabled=1
 
 - name: Set boot order
-  ansible.builtin.command: qm set {{ vmid }} --boot c --bootdisk scsi0
+  ansible.builtin.command: qm set {{ vmid }} --boot order=scsi0
 
 - name: Enable serial console
   ansible.builtin.command: qm set {{ vmid }} --serial0 socket --vga serial0
