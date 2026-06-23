@@ -4,6 +4,7 @@
     dest: "{{ image_zst }}"
     mode: "0644"
     force: false
+    timeout: 300
 
 - name: Install zstd if missing
   ansible.builtin.apt:
