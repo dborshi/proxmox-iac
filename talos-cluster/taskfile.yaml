@@ -69,6 +69,7 @@ tasks:
     cmds:
       - talosctl upgrade --image $(talhelper genurl installer)
 
+  # Export export GITEA_TOKEN= in .env
   flux:bootstrap:
     desc: Bootstrap Flux on the cluster
     cmds:
