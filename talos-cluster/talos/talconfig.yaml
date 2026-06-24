@@ -1,7 +1,37 @@
 clusterName: dbnet
-talosVersion: v1.12.6
-kubernetesVersion: v1.35.3
+talosVersion: v1.13.5
+kubernetesVersion: v1.36.2
 endpoint: https://10.0.0.41:6443
+
+patches:
+  - |-
+    cluster:
+      extraManifests:
+        - https://github.com/fluxcd/flux2/releases/latest/download/install.yaml
+
+  - |-
+    machine:
+      network:
+        nameservers:
+          - 10.0.0.5
+          - 10.0.0.22
+
+controlPlane:
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions:
+          - siderolabs/qemu-guest-agent
+
+worker:
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions:
+          - siderolabs/util-linux-tools
+          - siderolabs/nvme-cli
+          - siderolabs/nfs-utils
+          - siderolabs/qemu-guest-agent
 
 nodes:
   - hostname: talos-cp-1
@@ -15,8 +45,6 @@ nodes:
         routes:
           - network: 0.0.0.0/0
             gateway: 10.0.0.1
-        #vip:
-        #  ip: 10.0.0.40
 
   - hostname: talos-wk-1
     ipAddress: 10.0.0.42
@@ -29,6 +57,21 @@ nodes:
         routes:
           - network: 0.0.0.0/0
             gateway: 10.0.0.1
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/nonfree-kmod-nvidia-lts
+            - siderolabs/nvidia-container-toolkit-lts
+    patches:
+      - |-
+        machine:
+          kernel:
+            modules:
+              - name: nvidia
+              - name: nvidia_uvm
+              - name: nvidia_drm
+              - name: nvidia_modeset
 
   - hostname: talos-wk-2
     ipAddress: 10.0.0.43
