@@ -64,6 +64,23 @@ tasks:
       - talosctl kubeconfig --nodes 10.0.0.41
           --talosconfig talos/clusterconfig/talosconfig
 
+  talos:upgrade:
+    desc: Upgrade Talos on all nodes
+    cmds:
+      - talosctl upgrade --image $(talhelper genurl installer)
+
+  flux:bootstrap:
+    desc: Bootstrap Flux on the cluster
+    cmds:
+      - flux bootstrap gitea \
+          --token-auth \
+          --hostname=git.dbnet.work \
+          --owner=dborshi \
+          --repository=proxmox-iac \
+          --branch=main \
+          --path=./talos-cluster/infra \
+          --personal
+
   # ── Full bring-up sequence ─────────────────────────────
   up:
     desc: Full cluster bootstrap from scratch
