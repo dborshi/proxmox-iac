@@ -134,7 +134,8 @@ tasks:
   cni:reconcile-cilium:
     desc: Force Flux to reconcile the Cilium HelmRelease
     cmds:
-      - flux reconcile hr cilium -n kube-system --with-source
+      - flux reconcile source git flux-system
+      - flux reconcile kustomization flux-system
 
   cni:reboot-cp:
     desc: Reboot control plane node to clear stale Flannel interfaces
