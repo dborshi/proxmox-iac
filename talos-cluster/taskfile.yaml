@@ -36,14 +36,14 @@ tasks:
     cmds: [talhelper genconfig]
 
   # ── Bootstrap ──────────────────────────────────────────
-  talos:apply-cp:
+  talos:apply-cp-insecure:
     desc: Apply config to control plane node
     dir: talos
     cmds:
       - talosctl apply-config --insecure --nodes 10.0.0.41
           --file clusterconfig/dbnet-talos-cp-1.yaml
 
-  talos:apply-workers:
+  talos:apply-workers-insecure:
     desc: Apply config to worker nodes
     dir: talos
     cmds:
@@ -67,7 +67,9 @@ tasks:
   talos:upgrade:
     desc: Upgrade Talos on all nodes
     cmds:
-      - talosctl upgrade --image $(talhelper genurl installer)
+      - talosctl -n 10.0.0.41 upgrade --image $(talhelper genurl installer --node talos-cp-1)
+      - talosctl -n 10.0.0.42 upgrade --image $(talhelper genurl installer --node talos-wk-1)
+      - talosctl -n 10.0.0.43 upgrade --image $(talhelper genurl installer --node talos-wk-2)
 
   # Export export GITEA_TOKEN= in .env
   flux:bootstrap:
@@ -88,7 +90,87 @@ tasks:
     cmds:
       - task: tf:apply
       - task: talos:genconfig
-      - task: talos:apply-cp
-      - task: talos:apply-workers
+      - task: talos:apply-cp-insecure
+      - task: talos:apply-workers-insecure
       - task: talos:bootstrap
       - task: talos:kubeconfig
+
+  talos:apply-cp:
+    desc: Apply config to control plane node
+    dir: talos
+    cmds:
+      - talosctl apply-config --nodes 10.0.0.41
+          --file clusterconfig/dbnet-talos-cp-1.yaml
+
+  talos:apply-wk:
+    desc: Apply config to worker nodes
+    dir: talos
+    cmds:
+      - talosctl apply-config --nodes 10.0.0.42
+          --file clusterconfig/dbnet-talos-wk-1.yaml
+      - talosctl apply-config --nodes 10.0.0.43
+          --file clusterconfig/dbnet-talos-wk-2.yaml
+
+  apply:
+    desc: Apply config to all nodes
+    cmds:
+      - task: talos:genconfig
+      - task: talos:apply-cp
+      - task: talos:apply-wk
+
+# ── CNI migration: Flannel → Cilium ────────────────────
+  cni:remove-flannel:
+    desc: Delete Flannel resources
+    cmds:
+      - kubectl delete namespace kube-flannel --ignore-not-found
+      - kubectl -n kube-system delete ds kube-flannel --ignore-not-found
+
+  cni:remove-kubeproxy:
+    desc: Delete kube-proxy
+    cmds:
+      - kubectl -n kube-system delete ds kube-proxy --ignore-not-found
+      - kubectl -n kube-system delete cm kube-proxy --ignore-not-found
+
+  cni:reconcile-cilium:
+    desc: Force Flux to reconcile the Cilium HelmRelease
+    cmds:
+      - flux reconcile hr cilium -n kube-system --with-source
+
+  cni:reboot-cp:
+    desc: Reboot control plane node to clear stale Flannel interfaces
+    cmds:
+      - talosctl reboot --nodes 10.0.0.41
+          --talosconfig talos/clusterconfig/talosconfig
+
+  cni:reboot-workers:
+    desc: Reboot worker nodes one at a time
+    cmds:
+      - talosctl reboot --nodes 10.0.0.42
+          --talosconfig talos/clusterconfig/talosconfig
+      - sleep 30
+      - talosctl reboot --nodes 10.0.0.43
+          --talosconfig talos/clusterconfig/talosconfig
+
+  cni:verify:
+    desc: Check Cilium pods and node status after migration
+    cmds:
+      - kubectl get pods -n kube-system -l k8s-app=cilium -o wide
+      - kubectl get pods -n kube-system -l k8s-app=cilium-operator
+      - kubectl get nodes
+
+  # ── Full migration sequence ─────────────────────────────
+  cni:migrate:
+    desc: >
+      Migrate Flannel -> Cilium. Requires talconfig.yaml already patched
+      with cluster.network.cni.name: none (and proxy.disabled: true if
+      using kube-proxy replacement) before running this.
+    cmds:
+      - task: talos:genconfig
+      - task: talos:apply-cp
+      - task: talos:apply-wk
+      - task: cni:reconcile-cilium
+      - task: cni:remove-flannel
+      - task: cni:remove-kubeproxy
+      - task: cni:reboot-cp
+      - task: cni:reboot-workers
+      - task: cni:verify

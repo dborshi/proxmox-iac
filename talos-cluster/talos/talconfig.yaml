@@ -16,21 +16,24 @@ patches:
           - 10.0.0.5
           - 10.0.0.22
 
+  - |-
+    cluster:
+      network:
+        cni:
+          name: none
+      proxy:
+        disabled: true
+    machine:
+      features:
+        kubePrism:
+          enabled: true
+          port: 7445
+
 controlPlane:
   schematic:
     customization:
       systemExtensions:
         officialExtensions:
-          - siderolabs/qemu-guest-agent
-
-worker:
-  schematic:
-    customization:
-      systemExtensions:
-        officialExtensions:
-          - siderolabs/util-linux-tools
-          - siderolabs/nvme-cli
-          - siderolabs/nfs-utils
           - siderolabs/qemu-guest-agent
 
 nodes:
@@ -63,6 +66,10 @@ nodes:
           officialExtensions:
             - siderolabs/nonfree-kmod-nvidia-lts
             - siderolabs/nvidia-container-toolkit-lts
+            - siderolabs/util-linux-tools
+            - siderolabs/nvme-cli
+            - siderolabs/nfs-utils
+            - siderolabs/qemu-guest-agent
     patches:
       - |-
         machine:
@@ -84,3 +91,11 @@ nodes:
         routes:
           - network: 0.0.0.0/0
             gateway: 10.0.0.1
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/util-linux-tools
+            - siderolabs/nvme-cli
+            - siderolabs/nfs-utils
+            - siderolabs/qemu-guest-agent
