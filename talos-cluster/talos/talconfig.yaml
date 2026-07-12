@@ -80,6 +80,15 @@ nodes:
               - name: nvidia_drm
               - name: nvidia_modeset
 
+      - |-
+        apiVersion: v1alpha1
+        kind: UserVolumeConfig
+        name: openebs-data
+        provisioning:
+          diskSelector:
+            match: '"/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1" in disk.symlinks'
+          maxSize: 0
+
   - hostname: talos-wk-2
     ipAddress: 10.0.0.43
     installDisk: /dev/sda
@@ -99,3 +108,12 @@ nodes:
             - siderolabs/nvme-cli
             - siderolabs/nfs-utils
             - siderolabs/qemu-guest-agent
+    patches:
+      - |-
+        apiVersion: v1alpha1
+        kind: UserVolumeConfig
+        name: openebs-data
+        provisioning:
+          diskSelector:
+            match: '"/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1" in disk.symlinks'
+          maxSize: 0
