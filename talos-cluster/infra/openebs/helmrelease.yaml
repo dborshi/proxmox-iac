@@ -40,3 +40,9 @@ spec:
         name: openebs-hostpath
         isDefaultClass: true
         reclaimPolicy: Delete
+    loki:
+      enabled: false
+    alloy:
+      enabled: false
+    minio:
+      enabled: false
