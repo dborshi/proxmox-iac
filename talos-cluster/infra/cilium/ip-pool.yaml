@@ -5,4 +5,4 @@ metadata:
 spec:
   blocks:
     - start: 10.0.0.45
-      end: 10.0.0.49
+      stop: 10.0.0.49
