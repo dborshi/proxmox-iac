@@ -67,7 +67,6 @@
     tailscale up
     --authkey={{ tailscale_auth_key }}
     --advertise-routes=10.0.0.0/24
-    --accept-routes
     --hostname=proxmox-lxc
     --force-reauth
   async: 35
