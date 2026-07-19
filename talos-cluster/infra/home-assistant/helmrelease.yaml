@@ -1,0 +1,132 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: home-assistant
+  namespace: home-assistant
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: home-assistant
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    defaultPodOptions:
+      automountServiceAccountToken: false
+
+    controllers:
+      home-assistant:
+        type: statefulset
+
+        annotations:
+          reloader.stakater.com/auto: "true"
+
+        pod:
+          hostNetwork: true
+          dnsPolicy: ClusterFirstWithHostNet
+
+        initContainers:
+          config-sync:
+            image:
+              repository: busybox
+              tag: "1.36"
+            command:
+              - sh
+              - -c
+              - |
+                echo "Syncing git-managed config into /config..."
+                cp -v /gitops/configuration.yaml /config/configuration.yaml
+                cp -v /gitops/automations.yaml /config/automations.yaml
+                cp -v /gitops/scripts.yaml /config/scripts.yaml
+                cp -v /gitops-secrets/secrets.yaml /config/secrets.yaml
+                echo "Done."
+
+        containers:
+          main:
+            image:
+              repository: ghcr.io/home-assistant/home-assistant
+              tag: stable
+            env:
+              TZ: Europe/Tirana
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 8123
+                  initialDelaySeconds: 60
+                  periodSeconds: 30
+                  timeoutSeconds: 10
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 8123
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+            resources:
+              requests:
+                cpu: 250m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
+
+    service:
+      main:
+        controller: home-assistant
+        type: ClusterIP
+        ports:
+          http:
+            port: 8123
+
+    ingress:
+      main:
+        className: cilium
+        hosts:
+          - host: ha.dbnet.work
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      config:
+        existingClaim: home-assistant-config
+        globalMounts:
+          - path: /config
+
+      gitops-config:
+        type: configMap
+        name: home-assistant-config-src
+        globalMounts:
+          - path: /gitops
+            readOnly: true
+        advancedMounts:
+          home-assistant:
+            config-sync:
+              - path: /gitops
+                readOnly: true
+
+      gitops-secrets:
+        type: secret
+        name: home-assistant-secrets
+        globalMounts:
+          - path: /gitops-secrets
+            readOnly: true
+        advancedMounts:
+          home-assistant:
+            config-sync:
+              - path: /gitops-secrets
+                readOnly: true

@@ -4,3 +4,5 @@ resources:
   - flux-system
   - cilium
   - openebs
+  - reloader
+  - home-assistant

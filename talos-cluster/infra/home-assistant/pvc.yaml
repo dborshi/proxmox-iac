@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: home-assistant-config
+  namespace: home-assistant
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: openebs-hostpath # swap for openebs-lvmpv / cstor-csi / mayastor if that's what you run
+  resources:
+    requests:
+      storage: 5Gi
