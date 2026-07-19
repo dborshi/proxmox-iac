@@ -16,6 +16,7 @@ configMapGenerator:
       - config/configuration.yaml
       - config/automations.yaml
       - config/scripts.yaml
+      - config/scenes.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

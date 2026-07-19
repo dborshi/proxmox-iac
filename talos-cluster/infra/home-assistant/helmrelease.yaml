@@ -43,6 +43,7 @@ spec:
                 cp -v /gitops/configuration.yaml /config/configuration.yaml
                 cp -v /gitops/automations.yaml /config/automations.yaml
                 cp -v /gitops/scripts.yaml /config/scripts.yaml
+                cp -v /gitops/scenes.yaml /config/scenes.yaml
                 cp -v /gitops-secrets/secrets.yaml /config/secrets.yaml
                 echo "Done."
 

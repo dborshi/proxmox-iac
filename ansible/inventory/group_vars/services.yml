@@ -128,3 +128,11 @@ services:
     web:
       target: 10.0.0.32
       port: 3000
+
+  homeassistant:
+    host: ha
+    dns:
+      cname: proxy
+    web:
+      target: 10.0.0.45
+      port: 80
