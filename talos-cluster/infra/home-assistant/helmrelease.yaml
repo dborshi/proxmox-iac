@@ -110,9 +110,6 @@ spec:
       gitops-config:
         type: configMap
         name: home-assistant-config-src
-        globalMounts:
-          - path: /gitops
-            readOnly: true
         advancedMounts:
           home-assistant:
             config-sync:
@@ -122,9 +119,6 @@ spec:
       gitops-secrets:
         type: secret
         name: home-assistant-secrets
-        globalMounts:
-          - path: /gitops-secrets
-            readOnly: true
         advancedMounts:
           home-assistant:
             config-sync:
