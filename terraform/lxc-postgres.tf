@@ -2,7 +2,7 @@ resource "proxmox_virtual_environment_container" "postgres_lxc" {
   node_name     = "proxmox"
   vm_id         = 115
   unprivileged  = true
-  start_on_boot = true
+  start_on_boot = false
 
   startup {
     down_delay = -1

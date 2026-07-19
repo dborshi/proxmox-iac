@@ -2,7 +2,7 @@ resource "proxmox_virtual_environment_container" "arr_lxc" {
   node_name     = "proxmox"
   vm_id         = 155
   unprivileged  = true
-  start_on_boot = true
+  start_on_boot = false
 
   startup {
     down_delay = -1
@@ -63,7 +63,7 @@ resource "proxmox_virtual_environment_container" "arr_lxc" {
     deny_write = false
     gid        = 992
     mode       = "0660"
-    path       = "/dev/dri/renderD128"
+    path       = "/dev/dri/renderD129"
     uid        = 0
   }
   
@@ -71,7 +71,7 @@ resource "proxmox_virtual_environment_container" "arr_lxc" {
     deny_write = false
     gid        = 44
     mode       = "0660"
-    path       = "/dev/dri/card1"
+    path       = "/dev/dri/card2"
     uid        = 0
   }
 

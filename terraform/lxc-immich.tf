@@ -67,13 +67,13 @@ resource "proxmox_virtual_environment_container" "immich_lxc" {
     deny_write = false
     gid        = 992
     mode       = "0660"
-    path       = "/dev/dri/by-path/pci-0000:0c:00.0-render"
+    path       = "/dev/dri/by-path/pci-0000:09:00.0-render"
   }
   
   device_passthrough {
     deny_write = false
     gid        = 44
     mode       = "0660"
-    path       = "/dev/dri/by-path/pci-0000:0c:00.0-card"
+    path       = "/dev/dri/by-path/pci-0000:09:00.0-card"
   }
 }

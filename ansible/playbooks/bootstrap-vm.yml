@@ -1,0 +1,88 @@
+- name: Bootstrap VM
+  hosts: all
+  remote_user: "{{ admin_user }}"
+  become: true
+  become_user: root
+
+  vars:
+    admin_user: db
+    timezone: "Europe/Tirane"
+
+  tasks:
+    - name: Get sudo password from Bitwarden
+      ansible.builtin.set_fact:
+        sudo_password: "{{ lookup('bitwarden.secrets.lookup', bw_pass_db_sudo, base_url='https://vault.bitwarden.eu') }}"
+
+    - name: Update and upgrade all packages
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: full
+        cache_valid_time: 3600
+
+    - name: Install essential packages
+      ansible.builtin.apt:
+        name:
+          - sudo
+          - curl
+          - wget
+          - git
+          - htop
+          - ca-certificates
+          - unattended-upgrades
+        state: present
+
+    - name: Confirm qemu-guest-agent is installed and running
+      ansible.builtin.systemd:
+        name: qemu-guest-agent
+        state: started
+        enabled: true
+
+    - name: Set timezone
+      community.general.timezone:
+        name: "{{ timezone }}"
+
+    - name: Enable unattended upgrades
+      ansible.builtin.debconf:
+        name: unattended-upgrades
+        question: unattended-upgrades/enable_auto_updates
+        value: "true"
+        vtype: boolean
+
+    - name: Set admin user password
+      ansible.builtin.user:
+        name: "{{ admin_user }}"
+        password: "{{ sudo_password | password_hash('sha512') }}"
+        state: present
+
+    - name: Add admin user to sudo group
+      ansible.builtin.user:
+        name: "{{ admin_user }}"
+        groups: sudo
+        append: true
+
+    - name: Allow sudo with password for admin user
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers.d/{{ admin_user }}
+        line: "{{ admin_user }} ALL=(ALL) ALL"
+        create: true
+        mode: '0440'
+        validate: "visudo -cf %s"
+
+    - name: Harden SSH config
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      loop:
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
+        - { regexp: '^#?AuthorizedKeysFile', line: 'AuthorizedKeysFile .ssh/authorized_keys' }
+      notify: Restart SSH
+
+  handlers:
+    - name: Restart SSH
+      ansible.builtin.service:
+        name: ssh
+        state: restarted

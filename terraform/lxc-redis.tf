@@ -2,7 +2,7 @@ resource "proxmox_virtual_environment_container" "redis_lxc" {
   node_name     = "proxmox"
   vm_id         = 116
   unprivileged  = true
-  start_on_boot = true
+  start_on_boot = false
 
   startup {
     down_delay = -1

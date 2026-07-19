@@ -2,7 +2,7 @@ resource "proxmox_virtual_environment_container" "monitor_lxc" {
   node_name     = "proxmox"
   vm_id         = 130
   unprivileged  = true
-  start_on_boot = true
+  start_on_boot = false
 
   initialization {
     hostname = "monitor"
@@ -54,5 +54,11 @@ resource "proxmox_virtual_environment_container" "monitor_lxc" {
 
   features {
     nesting = true
+  }
+
+  lifecycle {
+    ignore_changes = [
+      started,
+    ]
   }
 }

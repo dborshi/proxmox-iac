@@ -3,7 +3,6 @@ resource "proxmox_virtual_environment_container" "forg-run_lxc" {
   vm_id         = 133
   unprivileged  = true
   start_on_boot = false
-  protection    = true
 
   startup {
     down_delay = -1
@@ -54,5 +53,11 @@ resource "proxmox_virtual_environment_container" "forg-run_lxc" {
 
   features {
     nesting = true
+  }
+
+  lifecycle {
+    ignore_changes = [
+      started,
+    ]
   }
 }
