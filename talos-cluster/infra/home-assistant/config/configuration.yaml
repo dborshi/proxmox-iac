@@ -14,6 +14,8 @@ http:
     - 10.244.0.0/16
     - 10.0.0.43
 
+smartir:
+
 climate:
   - platform: smartir
     name: Living Room AC
