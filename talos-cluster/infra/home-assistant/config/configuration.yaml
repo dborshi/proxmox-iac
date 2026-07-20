@@ -16,9 +16,13 @@ http:
 
 #smartir:
 
-#climate:
-#  - platform: smartir
-#    name: Living Room AC
-#    unique_id: living_room_ac
-#    device_code: 1944
-#    controller_data: remote.universal_remote
+climate:
+  - platform: smartir
+    name: AC
+    unique_id: living_room_ac
+    device_code: 1944
+    controller_data:
+      controller_type: Broadlink
+      remote_entity: remote.universal_remote
+      delay_secs: 0.5
+      num_repeats: 3
