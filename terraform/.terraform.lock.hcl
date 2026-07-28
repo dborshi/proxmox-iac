@@ -1,11 +1,15 @@
-# This file is maintained automatically by "terraform init".
+# This file is maintained automatically by "tofu init".
 # Manual edits may be lost in future updates.
 
-provider "registry.terraform.io/bitwarden/bitwarden-secrets" {
+provider "registry.opentofu.org/bitwarden/bitwarden-secrets" {
   version     = "1.0.1"
   constraints = "1.0.1"
   hashes = [
+    "h1:/2qxquBa1RABeQv0v6ULfHzW2aII3IhWdk73nXXxjiM=",
+    "h1:NrXBSc6wuNbppg3PkCHfhYM5MczPH+OBuLbBpGlMCI4=",
+    "h1:axWCxPqK9zGFPy5E57mHefrLfJvTgMuy+/ntTAlQTNM=",
     "h1:mu4rMvYhGddYD/uDfx6jlhaMs++o0D1g0A8KwwYLkJM=",
+    "h1:zv4Eai3Tzsfyv/HDeTyRijmREZZCvG3Qmy+0k+PJoJA=",
     "zh:0f442ba013c11d7a6de958b8a950353c795d4c0963c397959a239b6fd2a8c876",
     "zh:22bacf5df4c758d4a9bef2533152d3de7179efb7088a7152a850c2d18b03af11",
     "zh:3eaa72e5e0f74a8e6eb8fbf5aa4225ea656e15f918d2009682c6e972796fe8f7",
@@ -15,11 +19,23 @@ provider "registry.terraform.io/bitwarden/bitwarden-secrets" {
   ]
 }
 
-provider "registry.terraform.io/bpg/proxmox" {
+provider "registry.opentofu.org/bpg/proxmox" {
   version     = "0.111.1"
   constraints = "0.111.1"
   hashes = [
+    "h1:0qABXcf7ulwKRhKGoK4LYZ7ObyoFkPxHmCrL6jRhMgE=",
+    "h1:0xM4HmXdu0hLrauA8ugcxjZvYHA+PuRybUxrXZEAdRI=",
     "h1:ML2D3UUZTM99yrll/EBXj7wBYMb8xmQgomqFNybEoxY=",
+    "h1:PFGpaC7xcdC8w9jpxZPLJ/FFbVK5hd/CArUY+oXXTu8=",
+    "h1:XoYUWDsGWvxSlir/sYiGzx1MkcPVUtWIgc6OWEdf/C8=",
+    "h1:Zn7LyCWL/Xn0yCHiigXFYEp3MIv0MOVzUfL657QOplY=",
+    "h1:dIGBUSoC89e/PbpBEjbZ/YOzAkzrG1kF6EYcqk+8IqE=",
+    "h1:eERpiB94PyhN2SqE9E1+6sgpk0Kn6qjy555R2cjfpug=",
+    "h1:ejD4OSOL98W/SA4jLDvxEwCW8NSdVGKLyKmgfAUROK8=",
+    "h1:iTQv4FVFhMVl2juw6lgrVTpGFrdmdNPj+NFY2Dms0SE=",
+    "h1:jcqEv/zW+heFIPq5xwXxgS9EuBmbjIM1MriwQjx75WE=",
+    "h1:xF+AQJqpRf30WbrfHgSeuLqDBptWhTIdVoMyv7j6yVo=",
+    "h1:xWV1Y6ItiFXNCJO9OtyINMx8cqT5XiTOK2Rne7Jyu3w=",
     "zh:18fb7c31a08dde6bffa1a4d4a211e604d6d17eec7092fd59331b3db3c6f3742c",
     "zh:1cd60761538289d4dd2a1086b3ae62a7b0bdd4b1a2f824e9a44e243413168dba",
     "zh:2eb76f6fc8299b6820ff678c8252332cc3366e226b5ae2e61748fd2449c1ed92",
