@@ -1,4 +1,24 @@
-- name: Restart PostgreSQL
-  systemd:
-    name: postgresql
+- name: Validate PostgreSQL configuration
+  become: true
+  become_user: postgres
+  ansible.builtin.command:
+    cmd: >-
+      /usr/lib/postgresql/{{ postgres_version }}/bin/postgres
+      -C shared_buffers
+      -D /etc/postgresql/{{ postgres_version }}/main
+  changed_when: false
+  listen:
+    - Reload PostgreSQL
+    - Restart PostgreSQL instance
+
+- name: Reload PostgreSQL
+  ansible.builtin.systemd_service:
+    name: "postgresql@{{ postgres_version }}-main.service"
+    state: reloaded
+  listen: Reload PostgreSQL
+
+- name: Restart PostgreSQL instance
+  ansible.builtin.systemd_service:
+    name: "postgresql@{{ postgres_version }}-main.service"
     state: restarted
+  listen: Restart PostgreSQL instance

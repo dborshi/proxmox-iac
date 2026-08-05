@@ -1,29 +1,43 @@
 # Managed by Ansible - do not edit manually
 
-# VectorChord (required for Immich)
+# Required by Immich for vector search. Needs a full restart to take effect.
 shared_preload_libraries = 'vchord'
 
-# Connections
 listen_addresses = '*'
 port = 5432
 max_connections = 100
 
-# Memory
+# Double-caches with the host's ZFS ARC. Fine at this scale, not worth tuning.
 shared_buffers = 2GB
-work_mem = 16MB
-maintenance_work_mem = 512MB
-effective_cache_size = 6GB
 
-# WAL
+work_mem = 16MB
+# Per autovacuum worker (3 by default). Raise per-session for vector index builds.
+maintenance_work_mem = 256MB
+# Planner hint only. Assumes an 8GB container - check /sys/fs/cgroup/memory.max.
+effective_cache_size = 6GB
 wal_level = replica
-max_wal_size = 1GB
+# 4GB not the 1GB default: Immich's initial import would force constant checkpoints.
+max_wal_size = 4GB
 min_wal_size = 80MB
 
-# NVMe tuning
+# 15min not the 5min default. Fewer checkpoints, less flash wear.
+checkpoint_timeout = 15min
+
+# Safe ONLY because PGDATA including pg_wal is on ZFS - copy-on-write means
+# torn pages cannot happen. Cuts WAL volume 30-50%. Revisit if this ever
+# moves to ext4/xfs.
+full_page_writes = off
 random_page_cost = 1.1
 effective_io_concurrency = 200
-io_method = io_uring
 
-# Logging
+# "worker", not io_uring: io_uring rings count against RLIMIT_MEMLOCK, which
+# LXC caps low, and some seccomp profiles block io_uring_setup outright.
+io_method = {{ postgres_io_method }}
+io_workers = 4
+
 log_timezone = 'Europe/Tirane'
 timezone = 'Europe/Tirane'
+
+# Log queries over 1s. Only observability on this box, costs nothing when idle.
+log_min_duration_statement = 1000
+log_checkpoints = on

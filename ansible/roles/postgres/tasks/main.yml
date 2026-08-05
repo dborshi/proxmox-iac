@@ -1,11 +1,54 @@
+- name: Resolve mount source of PostgreSQL data directory
+  ansible.builtin.command: findmnt -no SOURCE --target /var/lib/postgresql
+  register: pg_data_mount
+  changed_when: false
+
+- name: Resolve mount source of root filesystem
+  ansible.builtin.command: findmnt -no SOURCE --target /
+  register: pg_root_mount
+  changed_when: false
+
+- name: Assert data directory is on its own filesystem
+  ansible.builtin.assert:
+    that:
+      - pg_data_mount.stdout != pg_root_mount.stdout
+    fail_msg: >-
+      /var/lib/postgresql resolves to the same filesystem as / ({{ pg_root_mount.stdout }}).
+      The nvmepool mount is not attached. Refusing to run - continuing would
+      place the cluster on rpool.
+
+- name: Assert data directory is on the expected pool
+  ansible.builtin.assert:
+    that:
+      - postgres_expected_pool in pg_data_mount.stdout
+    fail_msg: >-
+      Expected '{{ postgres_expected_pool }}' in the mount source for
+      /var/lib/postgresql but got '{{ pg_data_mount.stdout }}'.
+  when: postgres_expected_pool | length > 0
+
+- name: Set correct ownership on PostgreSQL data directory
+  ansible.builtin.file:
+    path: /var/lib/postgresql
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0750"
+
 - name: Install dependencies
   ansible.builtin.apt:
     name:
       - curl
       - gnupg
       - python3-psycopg2
+      - acl
     state: present
     update_cache: true
+
+- name: Ensure APT keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
 
 - name: Add PostgreSQL APT key
   ansible.builtin.get_url:
@@ -24,61 +67,43 @@
       Signed-By: /etc/apt/keyrings/postgresql.asc
     mode: "0644"
 
-- name: Install PostgreSQL 18 and pgvector
+- name: Install PostgreSQL {{ postgres_version }} and pgvector
   ansible.builtin.apt:
     name:
-      - postgresql-18
-      - postgresql-18-pgvector
-      - postgresql-contrib
+      - "postgresql-{{ postgres_version }}"
+      - "postgresql-{{ postgres_version }}-pgvector"
     state: present
     update_cache: true
-
-- name: Set correct ownership on PostgreSQL data directory
-  ansible.builtin.file:
-    path: /var/lib/postgresql
-    state: directory
-    owner: postgres
-    group: postgres
-    mode: "0750"
 
 - name: Get architecture
   ansible.builtin.command: dpkg --print-architecture
   register: postgres_deb_arch
   changed_when: false
 
-- name: Download VectorChord 1.1.1 for PostgreSQL 18
+- name: Download VectorChord {{ vchord_version }} for PostgreSQL {{ postgres_version }}
   ansible.builtin.get_url:
-    url: "https://github.com/tensorchord/VectorChord/releases/download/1.1.1/postgresql-18-vchord_1.1.1-1_{{ postgres_deb_arch.stdout }}.deb"
-    dest: /tmp/vchord.deb
+    url: >-
+      https://github.com/tensorchord/VectorChord/releases/download/{{ vchord_version }}/postgresql-{{ postgres_version }}-vchord_{{ vchord_version }}-1_{{ postgres_deb_arch.stdout }}.deb
+    dest: "/var/cache/apt/archives/vchord_{{ vchord_version }}_{{ postgres_deb_arch.stdout }}.deb"
     mode: "0644"
 
 - name: Install VectorChord
   ansible.builtin.apt:
-    deb: /tmp/vchord.deb
+    deb: "/var/cache/apt/archives/vchord_{{ vchord_version }}_{{ postgres_deb_arch.stdout }}.deb"
     state: present
 
-# Fix PrivateUsers incompatibility with unprivileged LXC
-- name: Create systemd override directory for PostgreSQL
+- name: Remove obsolete PrivateUsers override
   ansible.builtin.file:
-    path: /etc/systemd/system/postgresql.service.d
-    state: directory
-    mode: "0755"
-
-- name: Override PrivateUsers for unprivileged LXC
-  ansible.builtin.copy:
-    dest: /etc/systemd/system/postgresql.service.d/override.conf
-    content: |
-      [Service]
-      PrivateUsers=false
-    mode: "0644"
+    path: /etc/systemd/system/postgresql.service.d/override.conf
+    state: absent
 
 - name: Reload systemd daemon
-  ansible.builtin.systemd:
+  ansible.builtin.systemd_service:
     daemon_reload: true
 
 - name: Create PostgreSQL conf.d directory
   ansible.builtin.file:
-    path: /etc/postgresql/18/main/conf.d
+    path: "/etc/postgresql/{{ postgres_version }}/main/conf.d"
     state: directory
     owner: postgres
     group: postgres
@@ -86,33 +111,53 @@
 
 - name: Enable conf.d include in postgresql.conf
   ansible.builtin.lineinfile:
-    path: /etc/postgresql/18/main/postgresql.conf
+    path: "/etc/postgresql/{{ postgres_version }}/main/postgresql.conf"
     regexp: "^#?include_dir"
     line: "include_dir = 'conf.d'"
-  notify: Restart PostgreSQL
+  notify: Reload PostgreSQL
 
 - name: Deploy PostgreSQL config
   ansible.builtin.template:
     src: postgresql.conf.j2
-    dest: /etc/postgresql/18/main/conf.d/custom.conf
+    dest: "/etc/postgresql/{{ postgres_version }}/main/conf.d/custom.conf"
     owner: postgres
     group: postgres
     mode: "0640"
-  notify: Restart PostgreSQL
+  notify: Reload PostgreSQL
 
 - name: Deploy pg_hba.conf
   ansible.builtin.template:
     src: pg_hba.conf.j2
-    dest: /etc/postgresql/18/main/pg_hba.conf
+    dest: "/etc/postgresql/{{ postgres_version }}/main/pg_hba.conf"
     owner: postgres
     group: postgres
     mode: "0640"
-  notify: Restart PostgreSQL
+  notify: Reload PostgreSQL
 
-- name: Enable and start PostgreSQL
-  ansible.builtin.systemd:
-    name: postgresql
+- name: Enable PostgreSQL wrapper unit for boot
+  ansible.builtin.systemd_service:
+    name: postgresql.service
+    enabled: true
+
+- name: Enable and start PostgreSQL cluster instance
+  ansible.builtin.systemd_service:
+    name: "postgresql@{{ postgres_version }}-main.service"
     enabled: true
     state: started
 
-# Password manually set for postgres user to enable tcp authentication for Ansible
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for PostgreSQL to accept connections
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 5432
+    timeout: 60
+
+- name: Verify VectorChord is loaded
+  become: true
+  become_user: postgres
+  ansible.builtin.command: psql -tAc "SHOW shared_preload_libraries"
+  register: pg_preload
+  changed_when: false
+  failed_when: "'vchord' not in pg_preload.stdout"
