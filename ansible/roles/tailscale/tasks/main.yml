@@ -1,74 +1,118 @@
----
-- name: Get Tailscale auth key from Bitwarden
-  set_fact:
-    tailscale_auth_key: "{{ lookup('bitwarden.secrets.lookup', bw_tailscale_auth_key, base_url='https://vault.bitwarden.eu') }}"
+- name: Fetch Tailscale auth key from Bitwarden
+  ansible.builtin.set_fact:
+    tailscale_auth_key: >-
+      {{ lookup('bitwarden.secrets.lookup',
+                tailscale_bw_auth_key_id,
+                base_url=tailscale_bw_base_url) }}
   no_log: true
 
-- name: Install curl
-  apt:
-    name: curl
-    state: present
-    update_cache: yes
-
 - name: Add Tailscale apt signing key
-  get_url:
-    url: https://pkgs.tailscale.com/stable/debian/bookworm.gpg
-    dest: /usr/share/keyrings/tailscale-archive-keyring.asc
-    mode: '0644'
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/{{ tailscale_apt_distro }}/{{ tailscale_apt_release }}.noarmor.gpg"
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    owner: root
+    group: root
+    mode: "0644"
 
 - name: Add Tailscale apt repository
-  copy:
-    content: "deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.asc] https://pkgs.tailscale.com/stable/debian bookworm main\n"
+  ansible.builtin.copy:
+    content: >-
+      deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg]
+      https://pkgs.tailscale.com/stable/{{ tailscale_apt_distro }}
+      {{ tailscale_apt_release }} main
+
     dest: /etc/apt/sources.list.d/tailscale.list
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
+  register: tailscale_repo
 
 - name: Install Tailscale
-  apt:
+  ansible.builtin.apt:
     name: tailscale
     state: present
-    update_cache: yes
+    update_cache: true
+    cache_valid_time: "{{ 0 if tailscale_repo.changed else 3600 }}"
 
-- name: Enable and start tailscaled
-  systemd:
-    name: tailscaled
-    enabled: yes
-    state: started
-
-- name: Enable IPv4 forwarding
-  sysctl:
-    name: net.ipv4.ip_forward
-    value: '1'
-    sysctl_set: yes
+- name: Install ethtool for UDP GRO forwarding
+  ansible.builtin.apt:
+    name: ethtool
     state: present
-    reload: yes
+  when: tailscale_enable_gro
 
-- name: Enable IPv6 forwarding
-  sysctl:
-    name: net.ipv6.conf.all.forwarding
-    value: '1'
-    sysctl_set: yes
+- name: Enable IP forwarding
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    sysctl_file: /etc/sysctl.d/99-tailscale.conf
+    sysctl_set: true
     state: present
-    reload: yes
+    reload: true
+  loop:
+    - net.ipv4.ip_forward
+    - net.ipv6.conf.all.forwarding
 
-- name: Persist sysctl settings
-  copy:
-    content: |
-      net.ipv4.ip_forward = 1
-      net.ipv6.conf.all.forwarding = 1
-    dest: /etc/sysctl.d/99-tailscale.conf
+- name: Install UDP GRO forwarding unit
+  ansible.builtin.template:
+    src: tailscale-gro.service.j2
+    dest: /etc/systemd/system/tailscale-gro.service
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
+  when: tailscale_enable_gro
+  notify: Restart tailscale gro
 
-- name: Bring up Tailscale as subnet router for 10.0.0.0/24
-  command: >
-    tailscale up
-    --authkey={{ tailscale_auth_key }}
-    --advertise-routes=10.0.0.0/24
-    --hostname=proxmox-lxc
-    --force-reauth
-  async: 35
-  poll: 0
+- name: Enable UDP GRO forwarding unit
+  ansible.builtin.systemd_service:
+    name: tailscale-gro.service
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: tailscale_enable_gro
+
+- name: Ensure tailscaled is enabled and running
+  ansible.builtin.systemd_service:
+    name: tailscaled
+    enabled: true
+    state: started
+
+- name: Read current Tailscale backend state
+  ansible.builtin.command: tailscale status --json
+  register: tailscale_status
+  changed_when: false
+  failed_when: false
+
+- name: Authenticate and bring up Tailscale
+  ansible.builtin.command:
+    argv:
+      - tailscale
+      - up
+      - "--authkey={{ tailscale_auth_key }}"
+      - "--advertise-routes={{ tailscale_advertise_routes | join(',') }}"
+      - "--accept-routes={{ tailscale_accept_routes | lower }}"
+      - "--advertise-exit-node={{ tailscale_advertise_exit_node | lower }}"
+      - "--hostname={{ tailscale_hostname }}"
+  when: >-
+    tailscale_status.rc != 0
+    or (tailscale_status.stdout | from_json).BackendState | default('') != 'Running'
   changed_when: true
+  no_log: true
+
+- name: Reconcile advertised routes and route acceptance
+  ansible.builtin.command:
+    argv:
+      - tailscale
+      - set
+      - "--advertise-routes={{ tailscale_advertise_routes | join(',') }}"
+      - "--accept-routes={{ tailscale_accept_routes | lower }}"
+      - "--advertise-exit-node={{ tailscale_advertise_exit_node | lower }}"
+  changed_when: false
+
+- name: Configure client auto-update
+  ansible.builtin.command:
+    argv:
+      - tailscale
+      - set
+      - "--auto-update={{ tailscale_auto_update | lower }}"
+  changed_when: false
+  failed_when: false

@@ -1,5 +1,5 @@
----
-- name: Restart Tailscale
-  systemd:
-    name: tailscaled
+- name: Restart tailscale gro
+  ansible.builtin.systemd_service:
+    name: tailscale-gro.service
     state: restarted
+    daemon_reload: true

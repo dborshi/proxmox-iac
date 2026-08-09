@@ -6,7 +6,7 @@
   roles:
     - role: proxy/traefik_config
 
-- name: Configure dns LXC
+- name: Configure dns LXC and raspi
   hosts: 
     - dns
     - raspi

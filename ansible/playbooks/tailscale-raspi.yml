@@ -1,0 +1,9 @@
+- name: Configure the Raspberry Pi as standby subnet router
+  hosts: raspi
+  become: true
+  vars:
+    tailscale_hostname: dnspi
+    # Pi 3B has a 100 Mbit NIC behind USB. UDP GRO forwarding is pointless on that hardware.
+    tailscale_enable_gro: false
+  roles:
+    - role: tailscale

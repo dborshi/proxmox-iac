@@ -1,0 +1,38 @@
+- name: Configure Proxmox host for the Tailscale LXC
+  hosts: proxmox
+  vars:
+    tailscale_ctid: 121
+  tasks:
+    - name: Allow TUN device inside the Tailscale LXC
+      ansible.builtin.lineinfile:
+        path: "/etc/pve/lxc/{{ tailscale_ctid }}.conf"
+        line: "{{ item }}"
+        state: present
+      loop:
+        - "lxc.cgroup2.devices.allow: c 10:200 rwm"
+        - "lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file"
+      notify: Restart the Tailscale LXC
+
+  handlers:
+    - name: Restart the Tailscale LXC
+      ansible.builtin.command: "pct reboot {{ tailscale_ctid }}"
+      changed_when: true
+      notify: Wait for the Tailscale LXC
+
+    - name: Wait for the Tailscale LXC
+      ansible.builtin.wait_for:
+        host: "{{ hostvars[groups['tailscale'][0]].ansible_host }}"
+        port: 22
+        delay: 5
+        timeout: 180
+
+- name: Configure the LXC as primary subnet router
+  hosts: tailscale
+  become: true
+  vars:
+    tailscale_hostname: proxmox-lxc
+    tailscale_apt_distro: debian
+    tailscale_enable_gro: true
+    tailscale_advertise_exit_node: true
+  roles:
+    - role: tailscale

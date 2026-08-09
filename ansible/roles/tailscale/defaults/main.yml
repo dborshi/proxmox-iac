@@ -1,0 +1,19 @@
+tailscale_bw_auth_key_id: "{{ bw_tailscale_auth_key }}"
+tailscale_bw_base_url: "https://vault.bitwarden.eu"
+
+tailscale_advertise_routes:
+  - "10.0.0.0/24"
+
+tailscale_hostname: "{{ inventory_hostname }}"
+
+tailscale_accept_routes: false
+
+tailscale_apt_distro: "debian"
+tailscale_apt_release: "{{ ansible_facts['distribution_release'] }}"
+
+tailscale_auto_update: true
+
+tailscale_enable_gro: false
+tailscale_gro_interface: "{{ ansible_facts['default_ipv4']['interface'] | default('eth0') }}"
+
+tailscale_advertise_exit_node: false
