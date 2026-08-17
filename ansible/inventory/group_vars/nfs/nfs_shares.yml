@@ -1,0 +1,30 @@
+# ===========================================================================
+# SHARED SOURCE OF TRUTH -- read by Ansible AND by Terraform via yamldecode().
+#
+# Terraform reads this file at:
+#   yamldecode(file("${path.root}/../ansible/group_vars/nfs/nfs_shares.yml"))
+#
+# One entry == one virtual disk == one export.
+# ===========================================================================
+
+nfs_shares:
+  - serial: nfs01-datapool-pho01
+
+    # --- Terraform: the block device -------------------------------------
+    size: 500                  # GiB. Grow-only: XFS cannot shrink.
+    datastore_id: datapool
+    interface: scsi1
+
+    # --- Ansible: the filesystem -----------------------------------------
+    mount: /srv/nfs/immich
+    fstype: xfs
+    opts: "noatime,logbsize=256k"
+    owner: 3000
+    group: 3000
+    mode: "0750"
+
+    # --- Ansible: the export ---------------------------------------------
+    # Shares with no `client` key are mounted locally but not exported.
+    # `options` may be omitted to inherit nfs_export_options.
+    client: "10.0.0.40/29"
+    options: "rw,sync,no_subtree_check,root_squash,sec=sys"

@@ -1,0 +1,7 @@
+nfs_device_prefix: "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-"
+
+# Fallback for any share that omits its own `options`. root_squash because
+nfs_export_options: "rw,sync,no_subtree_check,root_squash,sec=sys"
+
+# Site data. Defined in group_vars/nfs_servers/shares.yml.
+nfs_shares: []

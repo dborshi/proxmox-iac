@@ -66,10 +66,21 @@ tasks:
 
   talos:upgrade:
     desc: Upgrade Talos on all nodes
+    dir: talos
     cmds:
-      - talosctl -n 10.0.0.41 upgrade --image $(talhelper genurl installer --node talos-cp-1)
-      - talosctl -n 10.0.0.42 upgrade --image $(talhelper genurl installer --node talos-wk-1)
-      - talosctl -n 10.0.0.43 upgrade --image $(talhelper genurl installer --node talos-wk-2)
+      - talhelper genconfig
+      - talhelper gencommand upgrade -n talos-wk-1 | bash
+      - kubectl wait --for=condition=Ready node/talos-wk-1 --timeout=10m
+      - talhelper gencommand upgrade -n talos-wk-2 | bash
+      - kubectl wait --for=condition=Ready node/talos-wk-2 --timeout=10m
+      - talhelper gencommand upgrade -n talos-cp-1 | bash
+
+  k8s:upgrade:
+    desc: Upgrade Kubernetes (version from talconfig.yaml)
+    dir: talos
+    cmds:
+      - talhelper genconfig
+      - talhelper gencommand upgrade-k8s | bash
 
   # Export export GITEA_TOKEN= in .env
   flux:bootstrap:

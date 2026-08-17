@@ -1,6 +1,6 @@
 clusterName: dbnet
-talosVersion: v1.13.5
-kubernetesVersion: v1.36.2
+talosVersion: v1.13.8
+kubernetesVersion: v1.36.3
 endpoint: https://10.0.0.41:6443
 
 patches:

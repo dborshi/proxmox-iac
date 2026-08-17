@@ -1,0 +1,46 @@
+- name: Wait for each data disk to appear
+  ansible.builtin.wait_for:
+    path: "{{ nfs_device_prefix }}{{ item.interface }}"
+    timeout: 30
+  loop: "{{ nfs_shares }}"
+  loop_control:
+    label: "{{ item.interface }}"
+
+- name: Create filesystem on each data disk
+  community.general.filesystem:
+    fstype: "{{ item.fstype }}"
+    dev: "{{ nfs_device_prefix }}{{ item.interface }}"
+  loop: "{{ nfs_shares }}"
+  loop_control:
+    label: "{{ item.interface }} -> {{ item.fstype }}"
+
+- name: Mount data disks and persist to fstab
+  ansible.posix.mount:
+    path: "{{ item.mount }}"
+    src: "{{ nfs_device_prefix }}{{ item.interface }}"
+    fstype: "{{ item.fstype }}"
+    opts: "{{ item.opts }}"
+    state: mounted
+  loop: "{{ nfs_shares }}"
+  loop_control:
+    label: "{{ item.interface }} -> {{ item.mount }}"
+
+- name: Set ownership on export roots
+  ansible.builtin.file:
+    path: "{{ item.mount }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  loop: "{{ nfs_shares }}"
+  loop_control:
+    label: "{{ item.interface }} -> {{ item.mount }} -> {{ item.owner }}:{{ item.group }}"
+
+- name: Write export table
+  ansible.builtin.template:
+    src: exports.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload exports

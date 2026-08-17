@@ -64,7 +64,7 @@ services:
     web:
       target: 10.0.0.202
       port: 30740
-  
+
   prowlarr:
     host: prowlarr
     dns:

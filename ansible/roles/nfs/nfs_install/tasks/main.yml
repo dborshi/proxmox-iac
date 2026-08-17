@@ -1,0 +1,51 @@
+- name: Install NFS server and filesystem tooling
+  ansible.builtin.apt:
+    name: "{{ nfs_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Mask NFSv3 and Kerberos services
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+    masked: true
+  loop: "{{ nfs_masked_services }}"
+  failed_when: false
+  loop_control:
+    label: "{{ item }}"
+
+- name: Configure nfsd protocol versions and threads
+  ansible.builtin.copy:
+    src: 10-nfs-server.conf
+    dest: /etc/nfs.conf.d/10-nfs-server.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart nfs-server
+
+- name: Enable and start nfs-server
+  ansible.builtin.systemd_service:
+    name: nfs-server
+    state: started
+    enabled: true
+
+- name: Apply pending restarts before verifying
+  ansible.builtin.meta: flush_handlers
+
+- name: Read active NFS versions from the kernel
+  ansible.builtin.slurp:
+    src: /proc/fs/nfsd/versions
+  register: nfs_active_versions
+  changed_when: false
+
+- name: Assert v4 is serving and v3 is off
+  vars:
+    _versions: "{{ nfs_active_versions.content | b64decode | trim }}"
+  ansible.builtin.assert:
+    that:
+      - "'+4.2' in _versions"
+      - "'+3' not in _versions"
+    fail_msg: "Unexpected version set: {{ _versions }}"
+    success_msg: "nfsd advertising: {{ _versions }}"

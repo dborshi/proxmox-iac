@@ -1,0 +1,10 @@
+nfs_packages:
+  - nfs-kernel-server
+  - xfsprogs
+
+nfs_masked_services:
+  - rpcbind.service
+  - rpcbind.socket
+  - rpc-statd.service
+  - rpc-gssd.service
+  - nfs-blkmap.service

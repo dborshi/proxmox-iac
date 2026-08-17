@@ -1,0 +1,12 @@
+---
+# The server itself: packages, systemd masking, /etc/nfs.conf.d/, nfsd.
+# Independent of nfs_shares -- runs against a host with no data disks.
+#
+# Run after editing roles/nfs/nfs_install/files/10-nfs-server.conf.
+
+- name: NFS server -- packages and daemon config
+  hosts: nfs
+  become: true
+
+  roles:
+    - nfs/nfs_install

@@ -1,0 +1,13 @@
+---
+# The shares: disks, filesystems, mounts, ownership, /etc/exports.
+# Everything driven by nfs_shares.
+#
+# Run after adding or removing an entry in
+# inventory/group_vars/nfs/nfs_shares.yml (and applying the Terraform).
+
+- name: NFS server -- disks, mounts, and exports
+  hosts: nfs
+  become: true
+
+  roles:
+    - nfs/nfs_config

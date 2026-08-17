@@ -1,11 +1,15 @@
-# This file is maintained automatically by "terraform init".
+# This file is maintained automatically by "tofu init".
 # Manual edits may be lost in future updates.
 
-provider "registry.terraform.io/bitwarden/bitwarden-secrets" {
+provider "registry.opentofu.org/bitwarden/bitwarden-secrets" {
   version     = "1.0.0"
   constraints = "1.0.0"
   hashes = [
+    "h1:0/k3qxTpG5JN67f4fK0L7zkFgfr2/PfcoA9Pd2BpelY=",
     "h1:JwVsAEAbIp1e8H5qHcT9CR+j5oZz7LAgCyJTuwczlrA=",
+    "h1:tm/sPudvPpzaVhv0yJ/XwOvb03cFoTJDK+/DB6M4KSU=",
+    "h1:yEynV9c+s/HCfLStrZQAmZU310sz7Dl4c7P3Azi2j8w=",
+    "h1:ywotNI33DInN2j1wjHUZuu2VGKcfx1KULfWlrBl5274=",
     "zh:32fb9eb0672fe0b12b136abd932a5531fb163b4cc982cd477feea96d28021701",
     "zh:3aabe5ab6809fce2ea6386a2164fa75736f6ed75189da91648b6129c72754ab8",
     "zh:6ca7554c7a35c211ea5678696f246259a54a22b4e7022ab335168124b005f92a",
@@ -15,11 +19,23 @@ provider "registry.terraform.io/bitwarden/bitwarden-secrets" {
   ]
 }
 
-provider "registry.terraform.io/bpg/proxmox" {
+provider "registry.opentofu.org/bpg/proxmox" {
   version     = "0.111.0"
   constraints = "0.111.0"
   hashes = [
+    "h1:/H61klkvlpppCtIHrxZLBMccaIIBBxojqJqE/u9PO/A=",
+    "h1:3PJeT61vdhgtopo82mTnRMUO6aq0IZmxPCnq8ldnKRk=",
+    "h1:C1Ofx3kIFV/y9YXU7F4BwBJEdNvWn3hrVxT3nkbDMwM=",
+    "h1:JUXMoX4HH2tMFSXoGO7DwXMPwM/4O5ModGv/Yc3GZWg=",
+    "h1:KsAMgHOkkVdL+ne9H0tGx5t0+hBtPSPCE4q0dHqQU1E=",
     "h1:RHGueoNj9kiaBMD5mbWFudB4sSvMuqlZJ8UfMfmgnss=",
+    "h1:UWVOFm+kUtDZ93mUI2KnN4GkJMZyUCpmuwYfliwaFLU=",
+    "h1:XQUPU27VaMQL9SjzMbYbXMJEdZ5grP9h6zIXlxuRnAo=",
+    "h1:YzP1hJTo93fdNMPZ/Wki9TcaB7Qgz5gMS9vQhp7hrmg=",
+    "h1:ajXBm3f5rZgG/eV7cyhtSu89J5kVosmQwdxgMVmGyYo=",
+    "h1:eUaVa33fPlJ6t5yJeCYN9rAV3wphUObj5bXSePmG9ic=",
+    "h1:f8ITlJs5s+lnxvbYSSreACgpljlOPNXi/lI3mCpgAD0=",
+    "h1:zg3KCBUz5fE53FkYPekjW8DbtN8vd39HcM1NdWAaaI0=",
     "zh:07afbe99e262f36b6285df259fa5b371bdb0ca62515a6da486ee004562ddcc1d",
     "zh:0b3f17c240a488c8768dc8415c8b80b285495c801a300a784bae677a49eff8bc",
     "zh:1fae807c8aec1b51685197414881ad2f62815e1258e3a02686dd938db0ff73eb",

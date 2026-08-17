@@ -1,0 +1,4 @@
+# {{ ansible_managed }}
+{% for share in nfs_shares if share.client is defined %}
+{{ share.mount }} {{ share.client }}({{ share.options | default(nfs_export_options) }})
+{% endfor %}

@@ -1,25 +1,27 @@
 locals {
-  nfs_node_name    = "proxmox"
-  nfs_vm_name      = "nfs"
-  nfs_vm_id        = 114
-  nfs_datastore_id = "local-zfs"
+  nfs_shares = yamldecode(
+    file("${path.root}/../ansible/inventory/group_vars/nfs/nfs_shares.yml")
+  ).nfs_shares
 
-  nfs_os_disk_size_gb   = 16
-
-  nfs_ip_address = "10.0.0.14/24"
-  nfs_gateway    = "10.0.0.1"
-
-  nfs_ssh_username = "db"
+  nfs_data_disks = {
+    for d in local.nfs_shares : d.interface => {
+      serial       = d.serial
+      size         = d.size
+      datastore_id = d.datastore_id
+    }
+  }
 }
 
 resource "proxmox_virtual_environment_vm" "nfs" {
-  name        = local.nfs_vm_name
+  name        = "nfs"
   description = "NFS server. Cloned from Debian 13 template. Managed by Terraform."
   tags        = ["terraform"]
 
-  node_name = local.nfs_node_name
-  vm_id     = local.nfs_vm_id
+  node_name = "proxmox"
+  vm_id     = 114
   machine   = "q35"
+
+  scsi_hardware = "virtio-scsi-single"
 
   clone {
     vm_id = local.template_vm_id
@@ -44,28 +46,28 @@ resource "proxmox_virtual_environment_vm" "nfs" {
     dedicated = 2048
   }
 
-  scsi_hardware = "virtio-scsi-single"
-
   disk {
-    datastore_id = local.nfs_datastore_id
+    datastore_id = "local-zfs"
     interface    = "scsi0"
-    size         = local.nfs_os_disk_size_gb
+    size         = 16
     discard      = "on"
     iothread     = true
   }
 
-  virtiofs {
-    mapping       = "mediapool"
-    cache         = "auto"
-    expose_acl    = true
-    expose_xattr  = true
-  }
-
-  virtiofs {
-    mapping       = "datapool"
-    cache         = "auto"
-    expose_acl    = true
-    expose_xattr  = true
+  # Data disks. `serial` is what produces
+  # /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_<serial> in the guest, which is
+  # the path Ansible formats and mounts. Changing it is destructive.
+  dynamic "disk" {
+    for_each = local.nfs_data_disks
+    content {
+      datastore_id = disk.value.datastore_id
+      interface    = disk.key
+      size         = disk.value.size
+      serial       = disk.value.serial
+      discard      = "on"
+      iothread     = true
+      backup       = true
+    }
   }
 
   network_device {
@@ -75,21 +77,21 @@ resource "proxmox_virtual_environment_vm" "nfs" {
   vga {
     type = "serial0"
   }
-  
+
   serial_device {}
 
   boot_order = ["scsi0"]
 
   initialization {
-    datastore_id = local.nfs_datastore_id
+    datastore_id = "local-zfs"
     interface    = "ide2"
 
     vendor_data_file_id = proxmox_virtual_environment_file.generic_cloud_init_vendordata.id
 
     ip_config {
       ipv4 {
-        address = local.nfs_ip_address
-        gateway = local.nfs_gateway
+        address = "10.0.0.14/24"
+        gateway = "10.0.0.1"
       }
     }
 
@@ -106,10 +108,13 @@ resource "proxmox_virtual_environment_vm" "nfs" {
   operating_system {
     type = "l26"
   }
-#  lifecycle {
-#    ignore_changes = [
-#      initialization,
-#    ]
-#  }
-}
 
+  # The data disks are attributes of this resource, so destroying the VM
+  # destroys them. This is the only guard.
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      initialization
+    ]
+  }
+}
