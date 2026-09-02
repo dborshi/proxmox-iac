@@ -61,4 +61,10 @@ resource "proxmox_virtual_environment_container" "redis_lxc" {
   features {
     nesting = false
   }
+  
+  lifecycle {
+    ignore_changes = [
+      started,
+    ]
+  }
 }

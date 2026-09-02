@@ -47,7 +47,7 @@ services:
       cname: proxy
     web:
       target: 10.0.0.19
-      port: 8080
+      port: 9000
 
   immich:
     host: immich

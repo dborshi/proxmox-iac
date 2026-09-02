@@ -14,6 +14,7 @@ nfs_shares:
     size: 500                  # GiB. Grow-only: XFS cannot shrink.
     datastore_id: datapool
     interface: scsi1
+    backup: true
 
     # --- Ansible: the filesystem -----------------------------------------
     mount: /srv/nfs/immich
@@ -21,6 +22,28 @@ nfs_shares:
     opts: "noatime,logbsize=256k"
     owner: 3000
     group: 3000
+    mode: "0750"
+
+    # --- Ansible: the export ---------------------------------------------
+    # Shares with no `client` key are mounted locally but not exported.
+    # `options` may be omitted to inherit nfs_export_options.
+    client: "10.0.0.40/29"
+    options: "rw,sync,no_subtree_check,root_squash,sec=sys"
+
+  - serial: nfs01-datapool-fil01
+
+    # --- Terraform: the block device -------------------------------------
+    size: 300                  # GiB. Grow-only: XFS cannot shrink.
+    datastore_id: datapool
+    interface: scsi2
+    backup: true
+
+    # --- Ansible: the filesystem -----------------------------------------
+    mount: /srv/nfs/owncloud
+    fstype: xfs
+    opts: "noatime,logbsize=256k"
+    owner: 3001
+    group: 3001
     mode: "0750"
 
     # --- Ansible: the export ---------------------------------------------

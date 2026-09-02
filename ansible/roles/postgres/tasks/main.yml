@@ -26,14 +26,6 @@
       /var/lib/postgresql but got '{{ pg_data_mount.stdout }}'.
   when: postgres_expected_pool | length > 0
 
-- name: Set correct ownership on PostgreSQL data directory
-  ansible.builtin.file:
-    path: /var/lib/postgresql
-    state: directory
-    owner: postgres
-    group: postgres
-    mode: "0750"
-
 - name: Install dependencies
   ansible.builtin.apt:
     name:
@@ -41,8 +33,23 @@
       - gnupg
       - python3-psycopg2
       - acl
+      - locales
     state: present
     update_cache: true
+
+- name: Generate C.UTF-8 locale
+  ansible.builtin.locale_gen:
+    name: C.UTF-8
+    state: present
+
+- name: Configure system locale
+  ansible.builtin.copy:
+    dest: /etc/default/locale
+    content: |
+      LANG=C.UTF-8
+    owner: root
+    group: root
+    mode: "0644"
 
 - name: Ensure APT keyrings directory exists
   ansible.builtin.file:
@@ -62,7 +69,7 @@
     content: |
       Types: deb
       URIs: https://apt.postgresql.org/pub/repos/apt
-      Suites: {{ ansible_distribution_release }}-pgdg
+      Suites: {{ ansible_facts['distribution_release'] }}-pgdg
       Components: main
       Signed-By: /etc/apt/keyrings/postgresql.asc
     mode: "0644"
@@ -74,6 +81,17 @@
       - "postgresql-{{ postgres_version }}-pgvector"
     state: present
     update_cache: true
+  environment:
+    LANG: C.UTF-8
+    LC_ALL: C.UTF-8
+
+- name: Set correct ownership on PostgreSQL data directory
+  ansible.builtin.file:
+    path: /var/lib/postgresql
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0750"
 
 - name: Get architecture
   ansible.builtin.command: dpkg --print-architecture

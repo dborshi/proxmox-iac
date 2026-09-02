@@ -83,4 +83,9 @@ resource "proxmox_virtual_environment_container" "arr_lxc" {
   features {
     nesting = true
   }
+  lifecycle {
+    ignore_changes = [
+      started,
+    ]
+  }
 }

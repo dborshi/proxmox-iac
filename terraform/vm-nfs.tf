@@ -8,6 +8,7 @@ locals {
       serial       = d.serial
       size         = d.size
       datastore_id = d.datastore_id
+      backup       = d.backup
     }
   }
 }
@@ -54,9 +55,6 @@ resource "proxmox_virtual_environment_vm" "nfs" {
     iothread     = true
   }
 
-  # Data disks. `serial` is what produces
-  # /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_<serial> in the guest, which is
-  # the path Ansible formats and mounts. Changing it is destructive.
   dynamic "disk" {
     for_each = local.nfs_data_disks
     content {
@@ -66,7 +64,7 @@ resource "proxmox_virtual_environment_vm" "nfs" {
       serial       = disk.value.serial
       discard      = "on"
       iothread     = true
-      backup       = true
+      backup       = disk.value.backup
     }
   }
 
@@ -114,7 +112,8 @@ resource "proxmox_virtual_environment_vm" "nfs" {
   lifecycle {
     prevent_destroy = true
     ignore_changes = [
-      initialization
+      initialization,
+      started,
     ]
   }
 }

@@ -6,7 +6,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: openebs-hostpath # swap for openebs-lvmpv / cstor-csi / mayastor if that's what you run
+  storageClassName: openebs-hostpath
   resources:
     requests:
       storage: 5Gi

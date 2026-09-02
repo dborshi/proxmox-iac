@@ -55,4 +55,10 @@ resource "proxmox_virtual_environment_container" "forgejo_lxc" {
   features {
     nesting = true
   }
+  
+  lifecycle {
+    ignore_changes = [
+      started,
+    ]
+  }
 }

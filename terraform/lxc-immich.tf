@@ -76,4 +76,10 @@ resource "proxmox_virtual_environment_container" "immich_lxc" {
     mode       = "0660"
     path       = "/dev/dri/by-path/pci-0000:09:00.0-card"
   }
+
+  lifecycle {
+    ignore_changes = [
+      started,
+    ]
+  }
 }

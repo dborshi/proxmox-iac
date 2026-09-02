@@ -1,8 +1,10 @@
-resource "proxmox_virtual_environment_container" "keycloak_lxc" {
+resource "proxmox_virtual_environment_container" "authentik_lxc" {
   node_name     = "proxmox"
   vm_id         = 119
   unprivileged  = true
   start_on_boot = false
+  description   = "Managed by Terraform."
+  tags          = ["terraform"]
 
   startup {
     down_delay = -1
@@ -12,7 +14,7 @@ resource "proxmox_virtual_environment_container" "keycloak_lxc" {
 
 
   initialization {
-    hostname = "keycloak"
+    hostname = "authentik"
 
     ip_config {
       ipv4 {
@@ -43,7 +45,7 @@ resource "proxmox_virtual_environment_container" "keycloak_lxc" {
 
   disk {
     datastore_id = "local-zfs"
-    size         = 32
+    size         = 10
   }
 
   operating_system {
