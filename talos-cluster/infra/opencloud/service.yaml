@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: opencloud-headless
+  namespace: opencloud
+spec:
+  clusterIP: None
+  selector:
+    app: opencloud
+  ports:
+    - name: http
+      port: 9200
+      targetPort: http
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opencloud
+  namespace: opencloud
+  annotations:
+    lbipam.cilium.io/ips: 10.0.0.46
+spec:
+  type: LoadBalancer
+  selector:
+    app: opencloud
+  ports:
+    - name: http
+      port: 9200
+      targetPort: http
+      protocol: TCP

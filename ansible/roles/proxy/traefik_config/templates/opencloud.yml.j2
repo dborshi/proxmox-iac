@@ -1,0 +1,24 @@
+http:
+  middlewares:
+    opencloud-authentik-discovery:
+      replacePath:
+        path: /application/o/opencloud/.well-known/openid-configuration
+
+  routers:
+    opencloud-authentik-discovery:
+      rule: "Host(`auth.dbnet.work`) && Path(`/.well-known/openid-configuration`)"
+      priority: 100
+      entryPoints:
+        - websecure
+      service: opencloud-authentik
+      middlewares:
+        - opencloud-authentik-discovery
+      tls:
+        certResolver: cloudflare
+
+  services:
+    opencloud-authentik:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.19:9000"
+        passHostHeader: true

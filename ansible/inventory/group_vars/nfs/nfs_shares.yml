@@ -39,7 +39,7 @@ nfs_shares:
     backup: true
 
     # --- Ansible: the filesystem -----------------------------------------
-    mount: /srv/nfs/owncloud
+    mount: /srv/nfs/cloud
     fstype: xfs
     opts: "noatime,logbsize=256k"
     owner: 3001

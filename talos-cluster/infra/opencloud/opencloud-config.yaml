@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opencloud-config
+  namespace: opencloud
+data:
+  OC_DOMAIN: cloud.dbnet.work
+  OC_URL: https://cloud.dbnet.work
+  OC_LOG_LEVEL: info
+  OC_LOG_COLOR: "false"
+  OC_LOG_PRETTY: "false"
+  OC_INSECURE: "false"
+  PROXY_HTTP_ADDR: 0.0.0.0:9200
+  PROXY_DEBUG_ADDR: 0.0.0.0:9205
+  PROXY_TLS: "false"
+  PROXY_ENABLE_BASIC_AUTH: "false"
+  PROXY_CSP_CONFIG_FILE_LOCATION: /etc/opencloud/csp.yaml
+
+  STORAGE_USERS_DRIVER: posix
+  STORAGE_USERS_POSIX_ROOT: /var/lib/opencloud/storage/users
+  STORAGE_USERS_ID_CACHE_STORE: nats-js-kv
+
+  OC_LDAP_URI: ldaps://ldap-server:1636
+  OC_LDAP_INSECURE: "true"
+  OC_LDAP_BIND_DN: cn=admin,dc=opencloud,dc=eu
+  OC_LDAP_USER_BASE_DN: ou=users,dc=opencloud,dc=eu
+  OC_LDAP_GROUP_BASE_DN: ou=groups,dc=opencloud,dc=eu
+  OC_LDAP_USER_FILTER: (objectclass=inetOrgPerson)
+  OC_LDAP_SERVER_WRITE_ENABLED: "true"
+  OC_LDAP_USER_SCHEMA_ID: opencloudUUID
+  OC_LDAP_GROUP_SCHEMA_ID: opencloudUUID
+  OC_LDAP_DISABLE_USER_MECHANISM: attribute
+  GRAPH_LDAP_SERVER_UUID: "false"
+  GRAPH_LDAP_REFINT_ENABLED: "true"
+  FRONTEND_READONLY_USER_ATTRIBUTES: user.onPremisesSamAccountName,user.displayName,user.mail,user.passwordProfile,user.memberOf
+  GRAPH_USERNAME_MATCH: none
+
+  OC_EXCLUDE_RUN_SERVICES: idm,idp
+  PROXY_AUTOPROVISION_ACCOUNTS: "true"
+  PROXY_USER_OIDC_CLAIM: sub
+  PROXY_AUTOPROVISION_CLAIM_USERNAME: sub
+  PROXY_USER_CS3_CLAIM: username
+
+  OC_ADMIN_USER_ID: "62fb0d8a1c2243dd777b29d6de8ea66169f8b96409eda04f128a737982065cbd"
+  SETTINGS_SETUP_DEFAULT_ASSIGNMENTS: "false"
+  PROXY_ROLE_ASSIGNMENT_DRIVER: default
+  GRAPH_ASSIGN_DEFAULT_USER_ROLE: "true"
+
+  IDP_DOMAIN: auth.dbnet.work
+  IDP_ISSUER_URL: https://auth.dbnet.work/
+  OC_OIDC_ISSUER: https://auth.dbnet.work/
+  OC_OIDC_CLIENT_ID: web
+  OC_OIDC_CLIENT_SCOPES: openid profile email
+  PROXY_OIDC_REWRITE_WELLKNOWN: "true"
+
+  WEBFINGER_WEB_OIDC_CLIENT_ID: web
+  WEBFINGER_WEB_OIDC_CLIENT_SCOPES: openid profile email
+  WEBFINGER_DESKTOP_OIDC_CLIENT_ID: OpenCloudDesktop
+  WEBFINGER_DESKTOP_OIDC_CLIENT_SCOPES: openid profile email offline_access
+  WEBFINGER_ANDROID_OIDC_CLIENT_ID: OpenCloudAndroid
+  WEBFINGER_ANDROID_OIDC_CLIENT_SCOPES: openid profile email offline_access
+  WEBFINGER_IOS_OIDC_CLIENT_ID: OpenCloudIOS
+  WEBFINGER_IOS_OIDC_CLIENT_SCOPES: openid profile email offline_access

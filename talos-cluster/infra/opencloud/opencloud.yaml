@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: opencloud
+  namespace: opencloud
+spec:
+  serviceName: opencloud-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opencloud
+  template:
+    metadata:
+      labels:
+        app: opencloud
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: talos-wk-2
+      securityContext:
+        fsGroup: 3001
+        fsGroupChangePolicy: OnRootMismatch
+      initContainers:
+        - name: init-config
+          image: opencloudeu/opencloud-rolling:7.5.0@sha256:6db1cfb06d430a663f16e9f33dcd4596d82a4875be0b4df233c26ce5f667ea74
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 3001
+            runAsGroup: 3001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              if [ ! -f /etc/opencloud/opencloud.yaml ]; then
+                echo "OpenCloud configuration not found; initializing."
+                opencloud init
+              else
+                echo "OpenCloud configuration already exists; skipping init."
+              fi
+          envFrom:
+            - configMapRef:
+                name: opencloud-config
+          env:
+            - name: OC_LDAP_BIND_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: opencloud-ldap
+                  key: LDAP_BIND_PASSWORD
+          volumeMounts:
+            - name: config
+              mountPath: /etc/opencloud
+            - name: data
+              mountPath: /var/lib/opencloud
+            - name: csp
+              mountPath: /etc/opencloud/csp.yaml
+              subPath: csp.yaml
+      containers:
+        - name: opencloud
+          image: opencloudeu/opencloud-rolling:7.5.0@sha256:6db1cfb06d430a663f16e9f33dcd4596d82a4875be0b4df233c26ce5f667ea74
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 3001
+            runAsGroup: 3001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          command: [opencloud]
+          args: [server]
+          ports:
+            - name: http
+              containerPort: 9200
+            - name: debug
+              containerPort: 9205
+          envFrom:
+            - configMapRef:
+                name: opencloud-config
+          env:
+            - name: OC_LDAP_BIND_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: opencloud-ldap
+                  key: LDAP_BIND_PASSWORD
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: debug
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 120
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: debug
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: debug
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 10
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              memory: 2Gi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/opencloud
+            - name: data
+              mountPath: /var/lib/opencloud
+            - name: csp
+              mountPath: /etc/opencloud/csp.yaml
+              subPath: csp.yaml
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: opencloud-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: opencloud-data
+        - name: csp
+          configMap:
+            name: opencloud-csp

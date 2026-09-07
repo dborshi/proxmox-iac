@@ -54,6 +54,7 @@
     - /etc/traefik
     - /etc/traefik/auth
     - /var/log/traefik
+    - /etc/traefik/conf
 
 - name: Create ACME storage file
   ansible.builtin.file:

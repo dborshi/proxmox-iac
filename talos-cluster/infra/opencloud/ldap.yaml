@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ldap-server
+  namespace: opencloud
+spec:
+  clusterIP: None
+  selector:
+    app: openldap
+  ports:
+    - name: ldaps
+      port: 1636
+      targetPort: 1636
+      protocol: TCP
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: openldap
+  namespace: opencloud
+spec:
+  serviceName: ldap-server
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openldap
+  template:
+    metadata:
+      labels:
+        app: openldap
+    spec:
+      containers:
+        - name: openldap
+          image: bitnamilegacy/openldap:2.6.10-debian-12-r4
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - /opt/bitnami/scripts/openldap/docker-entrypoint-override.sh
+            - /opt/bitnami/scripts/openldap/run.sh
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: LDAP_TLS_VERIFY_CLIENT
+              value: "never"
+            - name: LDAP_ENABLE_TLS
+              value: "yes"
+            - name: LDAP_TLS_CA_FILE
+              value: /opt/bitnami/openldap/share/openldap.crt
+            - name: LDAP_TLS_CERT_FILE
+              value: /opt/bitnami/openldap/share/openldap.crt
+            - name: LDAP_TLS_KEY_FILE
+              value: /opt/bitnami/openldap/share/openldap.key
+            - name: LDAP_ROOT
+              value: dc=opencloud,dc=eu
+            - name: LDAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: opencloud-ldap
+                  key: LDAP_BIND_PASSWORD
+          ports:
+            - name: ldaps
+              containerPort: 1636
+          readinessProbe:
+            tcpSocket:
+              port: ldaps
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 12
+          livenessProbe:
+            tcpSocket:
+              port: ldaps
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 6
+          volumeMounts:
+            - name: ldap-data
+              mountPath: /bitnami/openldap
+            - name: ldap-certs
+              mountPath: /opt/bitnami/openldap/share
+            - name: ldap-schema
+              mountPath: /schemas/10_opencloud_schema.ldif
+              subPath: 10_opencloud_schema.ldif
+            - name: ldap-base
+              mountPath: /ldifs/10_base.ldif
+              subPath: 10_base.ldif
+            - name: ldap-entrypoint
+              mountPath: /opt/bitnami/scripts/openldap/docker-entrypoint-override.sh
+              subPath: docker-entrypoint-override.sh
+      volumes:
+        - name: ldap-data
+          persistentVolumeClaim:
+            claimName: openldap-data
+        - name: ldap-certs
+          persistentVolumeClaim:
+            claimName: openldap-certs
+        - name: ldap-schema
+          configMap:
+            name: opencloud-ldap-files
+        - name: ldap-base
+          configMap:
+            name: opencloud-ldap-files
+        - name: ldap-entrypoint
+          configMap:
+            name: opencloud-ldap-files
+            defaultMode: 0755

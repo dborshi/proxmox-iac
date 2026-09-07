@@ -41,7 +41,7 @@ services:
       scheme: https
       insecure: true
 
-  keycloak:
+  authentik:
     host: auth
     dns:
       cname: proxy
@@ -57,13 +57,13 @@ services:
       target: 10.0.0.50
       port: 2283
 
-  owncloud:
+  opencloud:
     host: cloud
     dns:
       cname: proxy
     web:
-      target: 10.0.0.202
-      port: 30740
+      target: 10.0.0.46
+      port: 9200
 
   prowlarr:
     host: prowlarr

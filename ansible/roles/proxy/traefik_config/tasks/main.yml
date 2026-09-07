@@ -15,7 +15,16 @@
 - name: Deploy SINGLE dynamic config
   ansible.builtin.template:
     src: dynamic.yml.j2
-    dest: /etc/traefik/dynamic.yml
+    dest: /etc/traefik/conf/dynamic.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Traefik
+
+- name: Deploy OpenCloud config file
+  ansible.builtin.template:
+    src: opencloud.yml.j2
+    dest: /etc/traefik/conf/opencloud.yml
     owner: root
     group: root
     mode: '0644'
