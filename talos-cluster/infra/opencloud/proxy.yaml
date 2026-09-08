@@ -11,6 +11,6 @@ data:
         role_claim: groups
         role_mapping:
           - role_name: admin
-            claim_value: "authentik Admins"
+            claim_value: "opencloud-admins"
           - role_name: user
-            claim_value: "authentik Users"
+            claim_value: "opencloud-users"

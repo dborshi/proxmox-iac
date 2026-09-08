@@ -10,6 +10,7 @@ resources:
   - ldap.yaml
   - opencloud-config.yaml
   - opencloud.yaml
+  - proxy.yaml
   - service.yaml
 
 configMapGenerator:
