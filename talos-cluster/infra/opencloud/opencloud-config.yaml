@@ -44,18 +44,19 @@ data:
 
   OC_ADMIN_USER_ID: "ba5a3b89-5d04-4d7a-987f-2d620ed4ab1c"
   SETTINGS_SETUP_DEFAULT_ASSIGNMENTS: "false"
-  PROXY_ROLE_ASSIGNMENT_DRIVER: default
-  GRAPH_ASSIGN_DEFAULT_USER_ROLE: "true"
+  PROXY_ROLE_ASSIGNMENT_DRIVER: oidc
+  PROXY_ROLE_ASSIGNMENT_OIDC_CLAIM: groups
+  GRAPH_ASSIGN_DEFAULT_USER_ROLE: "false"
 
   IDP_DOMAIN: auth.dbnet.work
   IDP_ISSUER_URL: https://auth.dbnet.work/
   OC_OIDC_ISSUER: https://auth.dbnet.work/
   OC_OIDC_CLIENT_ID: web
-  OC_OIDC_CLIENT_SCOPES: openid profile email
+  OC_OIDC_CLIENT_SCOPES: openid profile email groups
   PROXY_OIDC_REWRITE_WELLKNOWN: "true"
 
   WEBFINGER_WEB_OIDC_CLIENT_ID: web
-  WEBFINGER_WEB_OIDC_CLIENT_SCOPES: openid profile email
+  WEBFINGER_WEB_OIDC_CLIENT_SCOPES: openid profile email groups
   WEBFINGER_DESKTOP_OIDC_CLIENT_ID: OpenCloudDesktop
   WEBFINGER_DESKTOP_OIDC_CLIENT_SCOPES: openid profile email offline_access
   WEBFINGER_ANDROID_OIDC_CLIENT_ID: OpenCloudAndroid

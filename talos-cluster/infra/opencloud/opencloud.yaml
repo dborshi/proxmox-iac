@@ -57,6 +57,9 @@ spec:
             - name: csp
               mountPath: /etc/opencloud/csp.yaml
               subPath: csp.yaml
+            - name: proxy
+              mountPath: /etc/opencloud/proxy.yaml
+              subPath: proxy.yaml
       containers:
         - name: opencloud
           image: opencloudeu/opencloud-rolling:7.5.0@sha256:6db1cfb06d430a663f16e9f33dcd4596d82a4875be0b4df233c26ce5f667ea74
@@ -118,6 +121,9 @@ spec:
             - name: csp
               mountPath: /etc/opencloud/csp.yaml
               subPath: csp.yaml
+            - name: proxy
+              mountPath: /etc/opencloud/proxy.yaml
+              subPath: proxy.yaml
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -128,3 +134,6 @@ spec:
         - name: csp
           configMap:
             name: opencloud-csp
+        - name: proxy
+          configMap:
+            name: opencloud-proxy

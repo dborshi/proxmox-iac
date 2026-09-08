@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opencloud-proxy
+  namespace: opencloud
+data:
+  proxy.yaml: |
+    role_assignment:
+      driver: oidc
+      oidc_role_mapper:
+        role_claim: groups
+        role_mapping:
+          - role_name: admin
+            claim_value: "authentik Admins"
+          - role_name: user
+            claim_value: "authentik Users"
