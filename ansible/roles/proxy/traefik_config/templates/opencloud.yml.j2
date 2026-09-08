@@ -1,5 +1,16 @@
 http:
   middlewares:
+    opencloud-authentik-cors:
+      headers:
+        accessControlAllowOriginList:
+          - "https://cloud.dbnet.work"
+        accessControlAllowMethods:
+          - "GET"
+          - "OPTIONS"
+        accessControlAllowHeaders:
+          - "*"
+        addVaryHeader: true
+
     opencloud-authentik-discovery:
       replacePath:
         path: /application/o/opencloud/.well-known/openid-configuration
@@ -13,6 +24,7 @@ http:
       service: opencloud-authentik
       middlewares:
         - opencloud-authentik-discovery
+        - opencloud-authentik-cors
       tls:
         certResolver: cloudflare
 
