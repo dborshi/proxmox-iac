@@ -4,6 +4,9 @@ resource "proxmox_virtual_environment_container" "forgejo_lxc" {
   unprivileged  = true
   start_on_boot = false
   protection    = true
+  description   = "Managed by Terraform."
+  tags          = ["terraform"]
+
 
   startup {
     down_delay = -1

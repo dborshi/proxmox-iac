@@ -3,6 +3,8 @@ resource "proxmox_virtual_environment_container" "postgres_lxc" {
   vm_id         = 115
   unprivileged  = true
   start_on_boot = false
+  description   = "Managed by Terraform."
+  tags          = ["terraform"]
 
   startup {
     down_delay = -1

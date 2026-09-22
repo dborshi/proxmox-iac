@@ -3,6 +3,8 @@ resource "proxmox_virtual_environment_container" "tailscale_lxc" {
   vm_id         = 121
   unprivileged  = true
   start_on_boot = true
+  description   = "Managed by Terraform."
+  tags          = ["terraform"]
 
   startup {
     down_delay = -1

@@ -3,6 +3,8 @@ resource "proxmox_virtual_environment_container" "monitor_lxc" {
   vm_id         = 130
   unprivileged  = true
   start_on_boot = false
+  description   = "Managed by Terraform."
+  tags          = ["terraform"]
 
   initialization {
     hostname = "monitor"

@@ -3,6 +3,9 @@ resource "proxmox_virtual_environment_container" "dns_lxc" {
   vm_id         = 122
   unprivileged  = true
   start_on_boot = true
+  description   = "Managed by Terraform."
+  tags          = ["terraform"]
+
 
   initialization {
     hostname = "dns"
