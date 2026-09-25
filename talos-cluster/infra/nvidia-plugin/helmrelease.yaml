@@ -25,6 +25,7 @@ spec:
   targetNamespace: nvidia-device-plugin
 
   values:
+    runtimeClassName: nvidia
     nodeSelector:
       kubernetes.io/hostname: talos-wk-1
 
