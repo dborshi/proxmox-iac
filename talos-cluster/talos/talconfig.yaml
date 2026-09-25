@@ -53,6 +53,10 @@ nodes:
     ipAddress: 10.0.0.42
     installDisk: /dev/sda
     controlPlane: false
+
+    nodeLabels:
+      nvidia.com/gpu.present: "true"
+
     networkInterfaces:
       - interface: eth0
         dhcp: false
