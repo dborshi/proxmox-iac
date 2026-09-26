@@ -92,7 +92,6 @@ spec:
 
     ingress:
       main:
-        enabled: true
         className: cilium
         hosts:
           - host: ha.dbnet.work

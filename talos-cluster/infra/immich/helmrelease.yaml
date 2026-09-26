@@ -93,6 +93,7 @@ spec:
 
       ingress:
         main:
+          enabled: true
           className: cilium
           
           hosts:
