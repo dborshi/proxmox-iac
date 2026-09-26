@@ -111,6 +111,7 @@ spec:
       controllers:
         main:
           pod:
+            runtimeClassName: nvidia
             nodeSelector:
               kubernetes.io/hostname: talos-wk-1
           
