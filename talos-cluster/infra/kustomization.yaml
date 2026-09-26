@@ -8,3 +8,4 @@ resources:
   - home-assistant
   - opencloud
   - nvidia-plugin
+  - immich

@@ -1,0 +1,128 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: immich
+  namespace: immich
+
+spec:
+  interval: 30m
+
+  chart:
+    spec:
+      chart: immich
+      version: 0.13.2
+
+      sourceRef:
+        kind: HelmRepository
+        name: immich
+        namespace: immich
+
+  values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 3000
+        runAsGroup: 3000
+        runAsNonRoot: true
+        fsGroup: 3000
+        fsGroupChangePolicy: OnRootMismatch
+
+    controllers:
+      main:
+        containers:
+          main:
+
+            image:
+              tag: v3.2.2
+
+            env:
+
+              TZ: Europe/Tirane
+              REDIS_HOSTNAME: "10.0.0.16"
+              REDIS_PORT: "6379"
+              REDIS_DBINDEX: "0"
+              REDIS_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-secrets
+                    key: REDIS_PASSWORD
+
+    immich:
+      persistence:
+        library:
+          existingClaim: immich-library
+
+    valkey:
+      enabled: false
+
+    server:
+      enabled: true
+
+      controllers:
+        main:
+          strategy: Recreate
+
+          containers:
+            main:
+              env:
+                DB_HOSTNAME: "10.0.0.15"
+                DB_PORT: "5432"
+
+                DB_USERNAME:
+                  valueFrom:
+                    secretKeyRef:
+                      name: immich-secrets
+                      key: DB_USERNAME
+
+                DB_DATABASE_NAME:
+                  valueFrom:
+                    secretKeyRef:
+                      name: immich-secrets
+                      key: DB_DATABASE_NAME
+
+                DB_PASSWORD:
+                  valueFrom:
+                    secretKeyRef:
+                      name: immich-secrets
+                      key: DB_PASSWORD
+
+                DB_VECTOR_EXTENSION: "vectorchord"
+
+      service:
+        main:
+          type: ClusterIP
+
+      ingress:
+        main:
+          className: cilium
+          
+          hosts:
+            - host: immich.dbnet.work
+              paths:
+                - path: /
+                  pathType: Prefix
+                  service:
+                    identifier: main
+                    port: http
+
+    machine-learning:
+      enabled: true
+      
+      controllers:
+        main:
+          pod:
+            nodeSelector:
+              kubernetes.io/hostname: talos-wk-1
+          
+          containers:
+            main:
+              image:
+                tag: v3.2.2-cuda
+              resources:
+                limits:
+                  nvidia.com/gpu: "1"
+      
+      persistence:
+        cache:
+          enabled: true
+          type: persistentVolumeClaim
+          existingClaim: immich-ml-cache
