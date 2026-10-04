@@ -39,7 +39,7 @@ spec:
                 port:
                   number: 9696
 
-    - host: qbittorrent.dbnet.work
+    - host: qbit.dbnet.work
       http:
         paths:
           - path: /
