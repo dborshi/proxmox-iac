@@ -9,3 +9,4 @@ resources:
   - opencloud
   - nvidia-plugin
   - immich
+  - arr
