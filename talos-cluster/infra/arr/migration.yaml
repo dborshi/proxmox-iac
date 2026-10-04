@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: arr-migration-wk2
+  namespace: arr
+spec:
+  restartPolicy: Never
+
+  nodeSelector:
+    kubernetes.io/hostname: talos-wk-2
+
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 3003
+    runAsGroup: 3003
+    fsGroup: 3003
+    seccompProfile:
+      type: RuntimeDefault
+
+  containers:
+    - name: migration
+      image: alpine:3.22
+      command:
+        - /bin/sh
+        - -c
+        - sleep 86400
+
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+
+      volumeMounts:
+        - name: qbittorrent
+          mountPath: /pvc/qbittorrent
+        - name: sonarr
+          mountPath: /pvc/sonarr
+        - name: radarr
+          mountPath: /pvc/radarr
+        - name: prowlarr
+          mountPath: /pvc/prowlarr
+        - name: bazarr
+          mountPath: /pvc/bazarr
+        - name: flaresolverr
+          mountPath: /pvc/flaresolverr
+
+  volumes:
+    - name: qbittorrent
+      persistentVolumeClaim:
+        claimName: qbittorrent-config
+
+    - name: sonarr
+      persistentVolumeClaim:
+        claimName: sonarr-config
+
+    - name: radarr
+      persistentVolumeClaim:
+        claimName: radarr-config
+
+    - name: prowlarr
+      persistentVolumeClaim:
+        claimName: prowlarr-config
+
+    - name: bazarr
+      persistentVolumeClaim:
+        claimName: bazarr-config
+
+    - name: flaresolverr
+      persistentVolumeClaim:
+        claimName: flaresolverr-config
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jellyfin-migration-wk1
+  namespace: arr
+spec:
+  restartPolicy: Never
+
+  nodeSelector:
+    kubernetes.io/hostname: talos-wk-1
+
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 3003
+    runAsGroup: 3003
+    fsGroup: 3003
+    seccompProfile:
+      type: RuntimeDefault
+
+  containers:
+    - name: migration
+      image: alpine:3.22
+      command:
+        - /bin/sh
+        - -c
+        - sleep 86400
+
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+
+      volumeMounts:
+        - name: jellyfin
+          mountPath: /pvc/jellyfin
+
+  volumes:
+    - name: jellyfin
+      persistentVolumeClaim:
+        claimName: jellyfin-config
