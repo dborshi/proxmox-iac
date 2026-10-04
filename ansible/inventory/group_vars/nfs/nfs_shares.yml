@@ -51,3 +51,25 @@ nfs_shares:
     # `options` may be omitted to inherit nfs_export_options.
     client: "10.0.0.40/29"
     options: "rw,sync,no_subtree_check,root_squash,sec=sys"
+
+  - serial: nfs01-mediapool-arr1
+
+    # --- Terraform: the block device -------------------------------------
+    size: 4500                  # GiB. Grow-only: XFS cannot shrink.
+    datastore_id: mediapool
+    interface: scsi3
+    backup: false
+
+    # --- Ansible: the filesystem -----------------------------------------
+    mount: /srv/nfs/arr
+    fstype: xfs
+    opts: "noatime,logbsize=256k"
+    owner: 3003
+    group: 3003
+    mode: "0750"
+
+    # --- Ansible: the export ---------------------------------------------
+    # Shares with no `client` key are mounted locally but not exported.
+    # `options` may be omitted to inherit nfs_export_options.
+    client: "10.0.0.40/29"
+    options: "rw,sync,no_subtree_check,root_squash,sec=sys"

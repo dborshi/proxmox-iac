@@ -1,45 +1,27 @@
-- name: Check if mediapool already exists
-  ansible.builtin.command: zpool list {{ zfs_pool_name }}
-  register: pool_check
-  failed_when: false
-  changed_when: false
-
-- name: Create mediapool with 2x2 cross-paired mirror vdevs
-  ansible.builtin.command: >
-    zpool create -f {{ zfs_pool_name }}
-    mirror {{ zfs_mirror_pairs[0] | join(' ') }}
-    mirror {{ zfs_mirror_pairs[1] | join(' ') }}
-  when: pool_check.rc != 0
-
-- name: Set pool-level properties
-  ansible.builtin.command: "zfs set {{ item }} {{ zfs_pool_name }}"
-  loop:
-    - compression=lz4
-    - atime=off
-    - xattr=sa
-    - dnodesize=auto
-  changed_when: false
-
-- name: Create datasets
-  community.general.zfs:
-    name: "{{ item }}"
+- name: Create mediapool as RAIDZ1
+  community.general.zpool:
+    name: "{{ zfs_pool_name }}"
     state: present
-    extra_zfs_properties:
-      compression: lz4
-      atime: "off"
-  loop: "{{ zfs_datasets }}"
+    mountpoint: "{{ zfs_mountpoint }}"
+    pool_properties:
+      ashift: "{{ zfs_ashift }}"
+    filesystem_properties:
+      compression: "{{ zfs_compression }}"
+    vdevs:
+      - type: raidz1
+        disks: "{{ zfs_disks }}"
 
-- name: Set mountpoint on pool root
-  ansible.builtin.command: zfs set mountpoint=/srv/mediapool {{ zfs_pool_name }}
-  failed_when: false
-  changed_when: false
-
-- name: Check if mediapool is registered in Proxmox storage
-  ansible.builtin.command: pvesm status --storage mediapool
-  register: pvesm_check
-  failed_when: false
-  changed_when: false
-
-- name: Register mediapool in Proxmox storage
-  ansible.builtin.command: pvesm add zfspool mediapool --pool mediapool --sparse 1
-  when: pvesm_check.rc != 0
+- name: Register mediapool in Proxmox
+  community.proxmox.proxmox_storage:
+    name: "{{ proxmox_storage_id }}"
+    state: present
+    type: zfspool
+    nodes: "{{ proxmox_storage_nodes }}"
+    content:
+      - images
+    zfspool_options:
+      pool: "{{ zfs_pool_name }}"
+      sparse: true
+  delegate_to: localhost
+  vars:
+    ansible_become: false

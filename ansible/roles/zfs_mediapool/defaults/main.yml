@@ -1,15 +1,17 @@
 zfs_pool_name: mediapool
 
-zfs_mirror_pairs:
-  - - /dev/disk/by-id/ata-WDC_WD20EFRX-68EUZN0_WD-WMC4M1226011
-    - /dev/disk/by-id/ata-WDC_WD20EFRX-68AX9N0_WD-WMC300938645
-  - - /dev/disk/by-id/ata-WDC_WD20EFRX-68EUZN0_WD-WMC4M1308546
-    - /dev/disk/by-id/ata-WDC_WD20EFRX-68AX9N0_WD-WMC301013328
+zfs_disks:
+  - /dev/disk/by-id/ata-WDC_WD20EFRX-68EUZN0_WD-WMC4M1226011
+  - /dev/disk/by-id/ata-WDC_WD20EFRX-68AX9N0_WD-WMC300938645
+  - /dev/disk/by-id/ata-WDC_WD20EFRX-68EUZN0_WD-WMC4M1308546
+  - /dev/disk/by-id/ata-WDC_WD20EFRX-68AX9N0_WD-WMC301013328
 
-zfs_datasets:
-  - "{{ zfs_pool_name }}/media"
-  - "{{ zfs_pool_name }}/media/movies"
-  - "{{ zfs_pool_name }}/media/tv"
-  - "{{ zfs_pool_name }}/downloads"
-  - "{{ zfs_pool_name }}/downloads/torrents"
-  - "{{ zfs_pool_name }}/downloads/usenet"
+zfs_ashift: 12
+zfs_mountpoint: /srv/mediapool
+zfs_compression: lz4
+
+proxmox_storage_id: mediapool
+
+# Must match the actual Proxmox node name.
+proxmox_storage_nodes:
+  - proxmox

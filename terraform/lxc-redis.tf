@@ -2,14 +2,14 @@ resource "proxmox_virtual_environment_container" "redis_lxc" {
   node_name     = "proxmox"
   vm_id         = 116
   unprivileged  = true
-  start_on_boot = false
+  start_on_boot = true
   description   = "Managed by Terraform."
   tags          = ["terraform"]
 
   startup {
-    down_delay = -1
-    order      = 2
-    up_delay   = -1
+    down_delay = 1
+    order      = 5
+    up_delay   = 1
   }
 
   initialization {

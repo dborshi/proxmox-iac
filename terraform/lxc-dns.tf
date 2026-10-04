@@ -6,6 +6,11 @@ resource "proxmox_virtual_environment_container" "dns_lxc" {
   description   = "Managed by Terraform."
   tags          = ["terraform"]
 
+  startup {
+    down_delay = 1
+    order      = 3
+    up_delay   = 1
+  }
 
   initialization {
     hostname = "dns"

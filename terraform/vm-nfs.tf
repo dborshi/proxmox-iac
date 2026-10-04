@@ -16,7 +16,13 @@ locals {
 resource "proxmox_virtual_environment_vm" "nfs" {
   name        = "nfs"
   description = "NFS server. Cloned from Debian 13 template. Managed by Terraform."
-  tags        = ["terraform"]
+    tags        = ["terraform"]
+
+  startup {
+    down_delay = 1
+    order      = 7
+    up_delay   = 240
+  }
 
   node_name = "proxmox"
   vm_id     = 114

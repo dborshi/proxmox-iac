@@ -2,14 +2,14 @@ resource "proxmox_virtual_environment_container" "authentik_lxc" {
   node_name     = "proxmox"
   vm_id         = 119
   unprivileged  = true
-  start_on_boot = false
+  start_on_boot = true
   description   = "Managed by Terraform."
   tags          = ["terraform"]
 
   startup {
-    down_delay = -1
-    order      = 8
-    up_delay   = -1
+    down_delay = 1
+    order      = 6
+    up_delay   = 1
   }
 
 

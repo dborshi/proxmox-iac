@@ -1,0 +1,16 @@
+- name: Configure Proxmox mediapool
+  hosts: proxmox
+  become: true
+  gather_facts: false
+
+  module_defaults:
+    group/community.proxmox.proxmox:
+      api_host: "{{ proxmox_api_host }}"
+      api_user: "{{ proxmox_api_user }}"
+      api_token_id: "{{ proxmox_api_token_id }}"
+      api_token_secret: "{{ proxmox_api_token_secret }}"
+      validate_certs: "{{ proxmox_api_validate_certs }}"
+      api_timeout: "{{ proxmox_api_timeout }}"
+
+  roles:
+    - zfs_mediapool

@@ -2,12 +2,12 @@ resource "proxmox_virtual_environment_container" "arr_lxc" {
   node_name     = "proxmox"
   vm_id         = 155
   unprivileged  = true
-  start_on_boot = false
+  start_on_boot = true
 
   startup {
-    down_delay = -1
-    order      = 6
-    up_delay   = -1
+    down_delay = 1
+    order      = 12
+    up_delay   = 1
   }
 
 

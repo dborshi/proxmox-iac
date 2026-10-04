@@ -1,8 +1,8 @@
 locals {
   nodes = {
-    talos-cp-1 = { id = 1001, ip = "10.0.0.41", cores = 3, mem = 8192, data_disk = null }
-    talos-wk-1 = { id = 1002, ip = "10.0.0.42", cores = 4, mem = 8192, data_disk = { datastore = "nvmepool", size = 128, path = "vm-1002-disk-0" } }
-    talos-wk-2 = { id = 1003, ip = "10.0.0.43", cores = 4, mem = 8192, data_disk = { datastore = "nvmepool", size = 128, path = "vm-1003-disk-0" } }
+    talos-cp-1 = { id = 1001, ip = "10.0.0.41", cores = 3, mem = 8192, data_disk = null, startup_order = 8 }
+    talos-wk-1 = { id = 1002, ip = "10.0.0.42", cores = 4, mem = 8192, data_disk = { datastore = "nvmepool", size = 128, path = "vm-1002-disk-0" }, startup_order = 9 }
+    talos-wk-2 = { id = 1003, ip = "10.0.0.43", cores = 4, mem = 8192, data_disk = { datastore = "nvmepool", size = 128, path = "vm-1003-disk-0" }, startup_order = 10 }
   }
 }
 
@@ -11,6 +11,12 @@ resource "proxmox_virtual_environment_vm" "talos_nodes" {
   name      = each.key
   node_name = "proxmox"
   vm_id     = each.value.id
+
+  startup {
+    order      = each.value.startup_order
+    up_delay   = 10
+    down_delay = 10
+}
 
   clone {
     vm_id = 9000

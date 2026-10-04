@@ -7,9 +7,9 @@ resource "proxmox_virtual_environment_container" "proxy_lxc" {
   tags          = ["terraform"]
 
   startup {
-    down_delay = -1
-    order      = 3
-    up_delay   = -1
+    down_delay = 1
+    order      = 1
+    up_delay   = 1
   }
 
 
