@@ -4,7 +4,7 @@ metadata:
   name: arr-media
 spec:
   capacity:
-    storage: 4.5Ti
+    storage: 4500Gi
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
@@ -16,11 +16,13 @@ spec:
   nfs:
     server: 10.0.0.14
     path: /srv/nfs/arr
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: arr-media
+  namespace: arr
 spec:
   accessModes:
     - ReadWriteMany
@@ -28,12 +30,14 @@ spec:
   volumeName: arr-media
   resources:
     requests:
-      storage: 4.5Ti
+      storage: 4500Gi
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: qbittorrent-config
+  namespace: arr
 spec:
   accessModes:
     - ReadWriteOnce
@@ -41,11 +45,13 @@ spec:
   resources:
     requests:
       storage: 10Gi
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: sonarr-config
+  namespace: arr
 spec:
   accessModes:
     - ReadWriteOnce
@@ -53,11 +59,13 @@ spec:
   resources:
     requests:
       storage: 10Gi
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: radarr-config
+  namespace: arr
 spec:
   accessModes:
     - ReadWriteOnce
@@ -65,11 +73,13 @@ spec:
   resources:
     requests:
       storage: 10Gi
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: prowlarr-config
+  namespace: arr
 spec:
   accessModes:
     - ReadWriteOnce
@@ -77,11 +87,13 @@ spec:
   resources:
     requests:
       storage: 5Gi
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: bazarr-config
+  namespace: arr
 spec:
   accessModes:
     - ReadWriteOnce
@@ -89,11 +101,13 @@ spec:
   resources:
     requests:
       storage: 5Gi
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: jellyfin-config
+  namespace: arr
 spec:
   accessModes:
     - ReadWriteOnce
@@ -101,11 +115,13 @@ spec:
   resources:
     requests:
       storage: 20Gi
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: flaresolverr-config
+  namespace: arr
 spec:
   accessModes:
     - ReadWriteOnce
