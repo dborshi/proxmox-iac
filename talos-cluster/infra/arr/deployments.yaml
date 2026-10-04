@@ -4,7 +4,7 @@ metadata:
   name: qbittorrent
   namespace: arr
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -60,7 +60,7 @@ metadata:
   name: sonarr
   namespace: arr
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -105,7 +105,7 @@ metadata:
   name: radarr
   namespace: arr
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -150,7 +150,7 @@ metadata:
   name: prowlarr
   namespace: arr
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -190,7 +190,7 @@ metadata:
   name: bazarr
   namespace: arr
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -235,7 +235,7 @@ metadata:
   name: flaresolverr
   namespace: arr
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -272,7 +272,7 @@ metadata:
   name: jellyfin
   namespace: arr
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
