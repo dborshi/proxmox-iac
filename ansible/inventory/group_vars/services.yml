@@ -70,56 +70,48 @@ services:
     dns:
       cname: proxy
     web:
-      target: 10.0.0.55
-      port: 9696
+      target: 10.0.0.45
+      port: 80
 
   radarr:
     host: radarr
     dns:
       cname: proxy
     web:
-      target: 10.0.0.55
-      port: 7878
+      target: 10.0.0.45
+      port: 80
 
   sonarr:
     host: sonarr
     dns:
       cname: proxy
     web:
-      target: 10.0.0.55
-      port: 8989
+      target: 10.0.0.45
+      port: 80
 
   qbittorrent:
     host: qbit
     dns:
       cname: proxy
     web:
-      target: 10.0.0.55
-      port: 8080
+      target: 10.0.0.45
+      port: 80
 
   jellyfin:
     host: jellyfin
     dns:
       cname: proxy
     web:
-      target: 10.0.0.55
-      port: 8096
+      target: 10.0.0.45
+      port: 80
 
-  flaresolverr:
-    host: flaresolverr
+  bazarr:
+    host: bazarr
     dns:
       cname: proxy
     web:
-      target: 10.0.0.55
-      port: 8191
-
-  seer:
-    host: seer
-    dns:
-      cname: proxy
-    web:
-      target: 10.0.0.55
-      port: 5055
+      target: 10.0.0.45
+      port: 80
 
   forgejo:
     host: git
