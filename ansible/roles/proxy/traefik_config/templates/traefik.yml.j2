@@ -32,3 +32,5 @@ certificatesResolvers:
       storage: /etc/traefik/acme.json
       dnsChallenge:
         provider: cloudflare
+        propagation:
+          requireAllRNS: false
