@@ -1,0 +1,60 @@
+name: omni-on-prem
+
+services:
+  omni:
+    container_name: omni
+    image: "ghcr.io/siderolabs/omni:{{ omni_prepared_image_version }}"
+
+    network_mode: host
+
+    devices:
+      - /dev/net/tun:/dev/net/tun
+
+    cap_add:
+      - NET_ADMIN
+
+    volumes:
+      - "{{ omni_etcd_directory }}:/_out/etcd"
+      - "{{ omni_secondary_storage_directory }}:/_out/secondary-storage"
+      - "{{ omni_gpg_key_path }}:/omni.asc:ro"
+
+    environment:
+      OMNI_AUTH_OIDC_CLIENT_SECRET: "${OMNI_AUTH_OIDC_CLIENT_SECRET:?Missing OIDC client secret}"
+
+    command:
+      # Account
+      - "--account-id=${OMNI_ACCOUNT_ID:?Missing account ID}"
+      - "--name=${OMNI_ACCOUNT_NAME:?Missing account name}"
+
+      # Storage
+      - "--sqlite-storage-path=/_out/secondary-storage/sqlite.db"
+      - "--private-key-source=file:///omni.asc"
+
+      # Internal listeners
+      - "--bind-addr={{ omni_api_bind_address }}"
+      - "--machine-api-bind-addr={{ omni_machine_api_bind_address }}"
+      - "--k8s-proxy-bind-addr={{ omni_kubernetes_proxy_bind_address }}"
+
+      # SideroLink
+      - "--event-sink-port={{ omni_event_sink_port }}"
+      - "--siderolink-wireguard-advertised-addr={{ omni_advertised_ip }}:{{ omni_wireguard_port }}"
+
+      # Public endpoints
+      - "--advertised-api-url=https://{{ omni_fqdn }}/"
+      - "--machine-api-advertised-url={{ omni_machine_api_advertised_url }}"
+      - "--advertised-kubernetes-proxy-url={{ omni_kubernetes_proxy_advertised_url }}"
+
+      # Initial administrators
+      - "--initial-users=${OMNI_INITIAL_USERS:?Missing initial users}"
+
+      # EULA
+      - "--eula-accept-name=${OMNI_EULA_ACCEPT_NAME:?Missing EULA name}"
+      - "--eula-accept-email=${OMNI_EULA_ACCEPT_EMAIL:?Missing EULA email}"
+
+      # OIDC
+      - "--auth-oidc-enabled=true"
+      - "--auth-oidc-provider-url={{ omni_oidc_provider_url }}"
+      - "--auth-oidc-client-id=${OMNI_OIDC_CLIENT_ID:?Missing OIDC client ID}"
+      - "--auth-oidc-scopes=openid,profile,email"
+
+    restart: unless-stopped

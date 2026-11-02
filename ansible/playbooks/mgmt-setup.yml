@@ -1,0 +1,7 @@
+- name: Prepare management VM
+  hosts: mgmt
+  become: true
+
+  roles:
+    - role: docker_setup
+    - role: mgmt

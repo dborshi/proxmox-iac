@@ -1,0 +1,28 @@
+---
+- name: Install ansible-core globally with pipx
+  community.general.pipx:
+    name: ansible-core
+    state: present
+    global: true
+    executable: /usr/bin/pipx
+
+- name: Inject Bitwarden SDK into Ansible environment
+  community.general.pipx:
+    name: ansible-core
+    inject_packages:
+      - bitwarden-sdk
+    state: inject
+    global: true
+    executable: /usr/bin/pipx
+
+- name: Install Ansible collections
+  community.general.ansible_galaxy_install:
+    type: collection
+    name: "{{ item }}"
+    dest: "{{ management_ansible_collections_path }}"
+    executable: "{{ management_ansible_venv }}/bin/ansible-galaxy"
+    state: present
+  loop:
+    - community.general
+    - bitwarden.secrets
+    - community.docker

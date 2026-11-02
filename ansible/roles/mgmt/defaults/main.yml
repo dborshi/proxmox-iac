@@ -1,0 +1,53 @@
+management_tool_cache_directory: /var/cache/management-tools
+management_tool_extract_directory: /opt/management-tools/releases
+management_ansible_venv: /opt/pipx/venvs/ansible-core
+management_ansible_collections_path: /usr/share/ansible/collections
+
+management_talosctl_version: "1.13.8"
+management_kubectl_minor_version: "1.36"
+
+# Omni directories
+omni_config_directory: /opt/omni
+omni_data_directory: /srv/omni
+omni_etcd_directory: /srv/omni/etcd
+omni_secondary_storage_directory: /srv/omni/secondary-storage
+omni_gpg_key_path: /srv/omni/omni.asc
+omni_compose_file: /opt/omni/docker-compose.yaml
+omni_env_file: /opt/omni/.env
+omni_image_version_file: /opt/omni/image-version
+
+# Omni identity
+omni_account_id: "{{ lookup('bitwarden.secrets.lookup', bw_omni_account_uuid, base_url='https://vault.bitwarden.eu') }}"
+omni_account_name: "dbnet"
+omni_fqdn: "omni.dbnet.work"
+omni_advertised_ip: "10.0.0.12"
+
+# Internal listeners
+omni_api_bind_address: "10.0.0.12:8080"
+omni_machine_api_bind_address: "10.0.0.12:8090"
+omni_kubernetes_proxy_bind_address: "10.0.0.12:8100"
+omni_event_sink_port: 8091
+omni_wireguard_port: 50180
+
+# Public endpoints
+omni_machine_api_advertised_url: "https://api.omni.dbnet.work/"
+omni_kubernetes_proxy_advertised_url: "https://kube.omni.dbnet.work/"
+
+# GPG private key from Bitwarden
+omni_gpg_private_key: "{{ lookup('bitwarden.secrets.lookup', bw_omni_gpg_private_key, base_url='https://vault.bitwarden.eu') }}"
+
+# Authentik OIDC
+omni_oidc_provider_url: "https://auth.dbnet.work/application/o/omni/"
+omni_oidc_client_id: "{{ lookup('bitwarden.secrets.lookup', bw_omni_oidc_client_id, base_url='https://vault.bitwarden.eu') }}"
+omni_oidc_client_secret: "{{ lookup('bitwarden.secrets.lookup', bw_omni_oidc_client_secret, base_url='https://vault.bitwarden.eu') }}"
+
+# User email
+omni_user_email: "{{ lookup('bitwarden.secrets.lookup', bw_omni_user_email, base_url='https://vault.bitwarden.eu') }}"
+
+# Initial administrators
+omni_initial_users:
+  - "{{ omni_user_email }}"
+
+# EULA acceptance
+omni_eula_accept_name: "Daniel Borshi"
+omni_eula_accept_email: "{{ omni_user_email }}"

@@ -1,0 +1,79 @@
+---
+- name: Read the Omni release prepared by the management VM playbook
+  ansible.builtin.slurp:
+    src: "{{ omni_image_version_file }}"
+  register: omni_image_version
+
+- name: Set the prepared Omni image version
+  ansible.builtin.set_fact:
+    omni_prepared_image_version: "{{ omni_image_version.content | b64decode | trim }}"
+
+- name: Create Omni directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  loop:
+    - "{{ omni_config_directory }}"
+    - "{{ omni_data_directory }}"
+    - "{{ omni_etcd_directory }}"
+    - "{{ omni_secondary_storage_directory }}"
+
+- name: Check whether the Omni encryption key already exists
+  ansible.builtin.stat:
+    path: "{{ omni_gpg_key_path }}"
+  register: omni_gpg_key_file
+
+- name: Install the existing Omni encryption key from Bitwarden
+  ansible.builtin.copy:
+    content: "{{ omni_gpg_private_key }}"
+    dest: "{{ omni_gpg_key_path }}"
+    owner: root
+    group: root
+    mode: "0600"
+    force: false
+  when: not omni_gpg_key_file.stat.exists
+  no_log: true
+  diff: false
+
+- name: Ensure the Omni encryption key has restrictive permissions
+  ansible.builtin.file:
+    path: "{{ omni_gpg_key_path }}"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Render Omni environment file
+  ansible.builtin.template:
+    src: omni.env.j2
+    dest: "{{ omni_env_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  diff: false
+
+- name: Render Omni Compose definition
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ omni_compose_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  diff: false
+
+- name: Start Omni with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ omni_config_directory }}"
+    files:
+      - "{{ omni_compose_file | basename }}"
+    env_files:
+      - "{{ omni_env_file | basename }}"
+    state: present
+    pull: missing
+    build: never
+    recreate: auto
+  no_log: true

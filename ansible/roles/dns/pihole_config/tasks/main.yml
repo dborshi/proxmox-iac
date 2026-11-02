@@ -5,7 +5,18 @@
 
 - name: Build A records
   ansible.builtin.set_fact:
-    dns_pihole_hosts: "{{ dns_pihole_hosts | default([]) + [ svc.dns.ip ~ ' ' ~ svc.host ~ '.' ~ domain ] }}"
+    dns_pihole_hosts: >-
+      {{
+        dns_pihole_hosts
+        + [
+            (
+              (svc.dns.ip_overrides | default({})).get('raspi', svc.dns.ip)
+              if 'raspi' in group_names
+              else svc.dns.ip
+            )
+            ~ ' ' ~ svc.host ~ '.' ~ domain
+          ]
+      }}
   loop: "{{ services.values() }}"
   loop_control:
     loop_var: svc

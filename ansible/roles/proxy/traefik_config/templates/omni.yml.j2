@@ -1,0 +1,41 @@
+http:
+  routers:
+    omni:
+      rule: "Host(`omni.dbnet.work`)"
+      entryPoints:
+        - websecure
+      service: omni-main
+      tls:
+        certResolver: cloudflare
+
+    omni-api:
+      rule: "Host(`api.omni.dbnet.work`)"
+      entryPoints:
+        - websecure
+      service: omni-api
+      tls:
+        certResolver: cloudflare
+
+    omni-kube:
+      rule: "Host(`kube.omni.dbnet.work`)"
+      entryPoints:
+        - websecure
+      service: omni-kube
+      tls:
+        certResolver: cloudflare
+
+  services:
+    omni-main:
+      loadBalancer:
+        servers:
+          - url: "h2c://10.0.0.12:8080"
+
+    omni-api:
+      loadBalancer:
+        servers:
+          - url: "h2c://10.0.0.12:8090"
+
+    omni-kube:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.12:8100"

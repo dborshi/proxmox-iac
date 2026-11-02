@@ -1,0 +1,215 @@
+---
+- name: Read latest stable tool releases from GitHub
+  ansible.builtin.uri:
+    url: "{{ item.url }}"
+    method: GET
+    headers:
+      Accept: application/vnd.github+json
+      X-GitHub-Api-Version: "2022-11-28"
+      User-Agent: ansible-management-vm
+    return_content: false
+    status_code: 200
+  loop:
+    - name: tofu
+      url: https://api.github.com/repos/opentofu/opentofu/releases/latest
+    - name: helm
+      url: https://api.github.com/repos/helm/helm/releases/latest
+    - name: task
+      url: https://api.github.com/repos/go-task/task/releases/latest
+    - name: omni
+      url: https://api.github.com/repos/siderolabs/omni/releases/latest
+    - name: flux
+      url: https://api.github.com/repos/fluxcd/flux2/releases/latest
+    - name: kustomize
+      url: https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest
+    - name: sops
+      url: https://api.github.com/repos/getsops/sops/releases/latest
+    - name: yq
+      url: https://api.github.com/repos/mikefarah/yq/releases/latest
+    - name: kubelogin
+      url: https://api.github.com/repos/int128/kubelogin/releases/latest
+    - name: talos
+      url: "https://api.github.com/repos/siderolabs/talos/releases/tags/v{{ management_talosctl_version }}"
+  register: management_release_responses
+
+- name: Store release metadata
+  ansible.builtin.set_fact:
+    management_releases: "{{ dict(management_release_responses.results | map(attribute='item.name') | zip(management_release_responses.results | map(attribute='json'))) }}"
+
+- name: Normalize release versions for cache and extraction paths
+  ansible.builtin.set_fact:
+    management_release_versions:
+      tofu: "{{ management_releases.tofu.tag_name }}"
+      helm: "{{ management_releases.helm.tag_name }}"
+      task: "{{ management_releases.task.tag_name }}"
+      flux: "{{ management_releases.flux.tag_name }}"
+      kustomize: "{{ management_releases.kustomize.tag_name | regex_replace('^.*/', '') }}"
+      kubelogin: "{{ management_releases.kubelogin.tag_name }}"
+
+- name: Read the latest kubectl patch version in the cluster minor line
+  ansible.builtin.uri:
+    url: "https://dl.k8s.io/release/stable-{{ management_kubectl_minor_version }}.txt"
+    return_content: true
+    status_code: 200
+  register: management_kubectl_release
+
+- name: Read the kubectl SHA-256 checksum
+  ansible.builtin.uri:
+    url: "https://dl.k8s.io/release/{{ management_kubectl_release.content | trim }}/bin/linux/amd64/kubectl.sha256"
+    return_content: true
+    status_code: 200
+  register: management_kubectl_checksum
+
+- name: Select standalone CLI release assets
+  ansible.builtin.set_fact:
+    management_release_assets:
+      omnictl: "{{ management_releases.omni.assets | selectattr('name', 'equalto', 'omnictl-linux-amd64') | first }}"
+      talosctl: "{{ management_releases.talos.assets | selectattr('name', 'equalto', 'talosctl-linux-amd64') | first }}"
+      sops: "{{ management_releases.sops.assets | selectattr('name', 'equalto', 'sops-' ~ management_releases.sops.tag_name ~ '.linux.amd64') | first }}"
+      yq: "{{ management_releases.yq.assets | selectattr('name', 'equalto', 'yq_linux_amd64') | first }}"
+
+- name: Download standalone CLI binaries with GitHub release checksums
+  ansible.builtin.get_url:
+    url: "{{ management_release_assets[item.asset].browser_download_url }}"
+    dest: "/usr/local/bin/{{ item.binary }}"
+    checksum: "{{ management_release_assets[item.asset].digest }}"
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - asset: omnictl
+      binary: omnictl
+    - asset: talosctl
+      binary: talosctl
+    - asset: sops
+      binary: sops
+    - asset: yq
+      binary: yq
+
+- name: Download latest kubectl with its official checksum
+  ansible.builtin.get_url:
+    url: "https://dl.k8s.io/release/{{ management_kubectl_release.content | trim }}/bin/linux/amd64/kubectl"
+    dest: /usr/local/bin/kubectl
+    checksum: "sha256:{{ management_kubectl_checksum.content | trim }}"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Select archive release assets
+  ansible.builtin.set_fact:
+    management_archive_assets:
+      tofu: "{{ management_releases.tofu.assets | selectattr('name', 'equalto', 'tofu_' ~ (management_release_versions.tofu | regex_replace('^v', '')) ~ '_linux_amd64.zip') | first }}"
+      task: "{{ management_releases.task.assets | selectattr('name', 'equalto', 'task_linux_amd64.tar.gz') | first }}"
+      flux: "{{ management_releases.flux.assets | selectattr('name', 'equalto', 'flux_' ~ (management_release_versions.flux | regex_replace('^v', '')) ~ '_linux_amd64.tar.gz') | first }}"
+      kustomize: "{{ management_releases.kustomize.assets | selectattr('name', 'equalto', 'kustomize_' ~ (management_release_versions.kustomize | regex_replace('^.*/', '')) ~ '_linux_amd64.tar.gz') | first }}"
+      kubelogin: "{{ management_releases.kubelogin.assets | selectattr('name', 'equalto', 'kubelogin_linux_amd64.zip') | first }}"
+
+- name: Download CLI release archives with GitHub release checksums
+  ansible.builtin.get_url:
+    url: "{{ management_archive_assets[item].browser_download_url }}"
+    dest: "{{ management_tool_cache_directory }}/{{ item }}-{{ management_release_versions[item] }}-linux-amd64.{{ 'zip' if item in ['tofu', 'kubelogin'] else 'tar.gz' }}"
+    checksum: "{{ management_archive_assets[item].digest }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - tofu
+    - task
+    - flux
+    - kustomize
+    - kubelogin
+
+- name: Retrieve official Helm SHA-256 checksum
+  ansible.builtin.uri:
+    url: "https://get.helm.sh/helm-{{ management_release_versions.helm }}-linux-amd64.tar.gz.sha256sum"
+    return_content: true
+    status_code: 200
+  register: management_helm_checksum
+
+- name: Download Helm archive
+  ansible.builtin.get_url:
+    url: "https://get.helm.sh/helm-{{ management_release_versions.helm }}-linux-amd64.tar.gz"
+    dest: "{{ management_tool_cache_directory }}/helm-{{ management_release_versions.helm }}-linux-amd64.tar.gz"
+    checksum: "sha256:{{ management_helm_checksum.content.split()[0] }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Create versioned extraction directories
+  ansible.builtin.file:
+    path: "{{ management_tool_extract_directory }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "tofu-{{ management_release_versions.tofu }}"
+    - "task-{{ management_release_versions.task }}"
+    - "helm-{{ management_release_versions.helm }}"
+    - "flux-{{ management_release_versions.flux }}"
+    - "kustomize-{{ management_release_versions.kustomize }}"
+    - "kubelogin-{{ management_release_versions.kubelogin }}"
+
+- name: Extract OpenTofu
+  ansible.builtin.unarchive:
+    src: "{{ management_tool_cache_directory }}/tofu-{{ management_release_versions.tofu }}-linux-amd64.zip"
+    dest: "{{ management_tool_extract_directory }}/tofu-{{ management_release_versions.tofu }}"
+    remote_src: true
+    creates: "{{ management_tool_extract_directory }}/tofu-{{ management_release_versions.tofu }}/tofu"
+
+- name: Extract Helm
+  ansible.builtin.unarchive:
+    src: "{{ management_tool_cache_directory }}/helm-{{ management_release_versions.helm }}-linux-amd64.tar.gz"
+    dest: "{{ management_tool_extract_directory }}/helm-{{ management_release_versions.helm }}"
+    remote_src: true
+    creates: "{{ management_tool_extract_directory }}/helm-{{ management_release_versions.helm }}/linux-amd64/helm"
+
+- name: Extract Task
+  ansible.builtin.unarchive:
+    src: "{{ management_tool_cache_directory }}/task-{{ management_release_versions.task }}-linux-amd64.tar.gz"
+    dest: "{{ management_tool_extract_directory }}/task-{{ management_release_versions.task }}"
+    remote_src: true
+    creates: "{{ management_tool_extract_directory }}/task-{{ management_release_versions.task }}/task"
+
+- name: Extract Flux
+  ansible.builtin.unarchive:
+    src: "{{ management_tool_cache_directory }}/flux-{{ management_release_versions.flux }}-linux-amd64.tar.gz"
+    dest: "{{ management_tool_extract_directory }}/flux-{{ management_release_versions.flux }}"
+    remote_src: true
+    creates: "{{ management_tool_extract_directory }}/flux-{{ management_release_versions.flux }}/flux"
+
+- name: Extract Kustomize
+  ansible.builtin.unarchive:
+    src: "{{ management_tool_cache_directory }}/kustomize-{{ management_release_versions.kustomize }}-linux-amd64.tar.gz"
+    dest: "{{ management_tool_extract_directory }}/kustomize-{{ management_release_versions.kustomize }}"
+    remote_src: true
+    creates: "{{ management_tool_extract_directory }}/kustomize-{{ management_release_versions.kustomize }}/kustomize"
+
+- name: Extract kubelogin
+  ansible.builtin.unarchive:
+    src: "{{ management_tool_cache_directory }}/kubelogin-{{ management_release_versions.kubelogin }}-linux-amd64.zip"
+    dest: "{{ management_tool_extract_directory }}/kubelogin-{{ management_release_versions.kubelogin }}"
+    remote_src: true
+    creates: "{{ management_tool_extract_directory }}/kubelogin-{{ management_release_versions.kubelogin }}/kubelogin"
+
+- name: Install extracted CLI binaries
+  ansible.builtin.copy:
+    src: "{{ item.source }}"
+    dest: "/usr/local/bin/{{ item.binary }}"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - binary: tofu
+      source: "{{ management_tool_extract_directory }}/tofu-{{ management_release_versions.tofu }}/tofu"
+    - binary: helm
+      source: "{{ management_tool_extract_directory }}/helm-{{ management_release_versions.helm }}/linux-amd64/helm"
+    - binary: task
+      source: "{{ management_tool_extract_directory }}/task-{{ management_release_versions.task }}/task"
+    - binary: flux
+      source: "{{ management_tool_extract_directory }}/flux-{{ management_release_versions.flux }}/flux"
+    - binary: kustomize
+      source: "{{ management_tool_extract_directory }}/kustomize-{{ management_release_versions.kustomize }}/kustomize"
+    - binary: kubectl-oidc_login
+      source: "{{ management_tool_extract_directory }}/kubelogin-{{ management_release_versions.kubelogin }}/kubelogin"

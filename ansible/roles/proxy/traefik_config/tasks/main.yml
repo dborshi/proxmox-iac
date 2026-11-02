@@ -30,6 +30,15 @@
     mode: '0644'
   notify: Restart Traefik
 
+- name: Deploy Omni config file
+  ansible.builtin.template:
+    src: omni.yml.j2
+    dest: /etc/traefik/conf/omni.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Traefik
+
 - name: Deploy htpasswd
   ansible.builtin.copy:
     content: "{{ proxy_traefik_htpasswd }}"

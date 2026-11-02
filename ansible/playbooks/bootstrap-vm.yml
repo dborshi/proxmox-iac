@@ -63,7 +63,7 @@
     - name: Allow sudo with password for admin user
       ansible.builtin.lineinfile:
         path: /etc/sudoers.d/{{ admin_user }}
-        line: "{{ admin_user }} ALL=(ALL) ALL"
+        line: "{{ admin_user }} ALL=(ALL:ALL) NOPASSWD: ALL\n"
         create: true
         mode: '0440'
         validate: "visudo -cf %s"

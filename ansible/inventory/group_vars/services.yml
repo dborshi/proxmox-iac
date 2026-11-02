@@ -5,6 +5,8 @@ services:
     host: proxy
     dns:
       ip: 10.0.0.20
+      ip_overrides:
+        raspi: 10.10.0.2
 
   piholepi:
     host: piholepi
@@ -128,3 +130,18 @@ services:
     web:
       target: 10.0.0.45
       port: 80
+
+  omni:
+    host: omni
+    dns:
+      cname: proxy
+
+  omni_api:
+    host: api.omni
+    dns:
+      cname: proxy
+
+  omni_kube:
+    host: kube.omni
+    dns:
+      cname: proxy

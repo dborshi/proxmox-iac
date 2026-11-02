@@ -1,0 +1,10 @@
+---
+- name: Configure and start Omni
+  hosts: mgmt
+  become: true
+
+  tasks:
+    - name: Run only Omni deployment tasks
+      ansible.builtin.import_role:
+        name: mgmt
+        tasks_from: omni

@@ -1,0 +1,22 @@
+---
+- name: Create Omni configuration directory
+  ansible.builtin.file:
+    path: "{{ omni_config_directory }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Pull the latest stable Omni image without starting a container
+  community.docker.docker_image_pull:
+    name: ghcr.io/siderolabs/omni
+    tag: "{{ management_releases.omni.tag_name }}"
+    pull: not_present
+
+- name: Record the prepared Omni release
+  ansible.builtin.copy:
+    content: "{{ management_releases.omni.tag_name }}\n"
+    dest: "{{ omni_image_version_file }}"
+    owner: root
+    group: root
+    mode: "0644"
