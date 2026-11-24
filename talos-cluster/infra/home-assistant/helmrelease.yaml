@@ -18,6 +18,7 @@ spec:
   values:
     defaultPodOptions:
       automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 120
 
     controllers:
       home-assistant:
@@ -30,31 +31,23 @@ spec:
           hostNetwork: true
           dnsPolicy: ClusterFirstWithHostNet
 
-        initContainers:
-          config-sync:
-            image:
-              repository: busybox
-              tag: "1.36"
-            command:
-              - sh
-              - -c
-              - |
-                echo "Syncing git-managed config into /config..."
-                cp -v /gitops/configuration.yaml /config/configuration.yaml
-                cp -v /gitops/automations.yaml /config/automations.yaml
-                cp -v /gitops/scripts.yaml /config/scripts.yaml
-                cp -v /gitops/scenes.yaml /config/scenes.yaml
-                cp -v /gitops-secrets/secrets.yaml /config/secrets.yaml
-                echo "Done."
-
         containers:
           main:
             image:
               repository: ghcr.io/home-assistant/home-assistant
-              tag: stable
+              tag: 2026.11.3@sha256:24e541ddae5818bf8eb27898b9ba00d0c344a655aa5097e9e9bd4b19356be847
             env:
               TZ: Europe/Tirana
             probes:
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 8123
+                  periodSeconds: 10
+                  failureThreshold: 60
               liveness:
                 enabled: true
                 custom: true
@@ -62,7 +55,6 @@ spec:
                   httpGet:
                     path: /
                     port: 8123
-                  initialDelaySeconds: 60
                   periodSeconds: 30
                   timeoutSeconds: 10
                   failureThreshold: 5
@@ -73,7 +65,6 @@ spec:
                   httpGet:
                     path: /
                     port: 8123
-                  initialDelaySeconds: 30
                   periodSeconds: 10
             resources:
               requests:
@@ -113,8 +104,18 @@ spec:
         name: home-assistant-config-src
         advancedMounts:
           home-assistant:
-            config-sync:
-              - path: /gitops
+            main:
+              - path: /config/configuration.yaml
+                subPath: configuration.yaml
+                readOnly: true
+              - path: /config/automations.yaml
+                subPath: automations.yaml
+                readOnly: true
+              - path: /config/scripts.yaml
+                subPath: scripts.yaml
+                readOnly: true
+              - path: /config/scenes.yaml
+                subPath: scenes.yaml
                 readOnly: true
 
       gitops-secrets:
@@ -122,6 +123,7 @@ spec:
         name: home-assistant-secrets
         advancedMounts:
           home-assistant:
-            config-sync:
-              - path: /gitops-secrets
+            main:
+              - path: /config/secret.yaml
+                subPath: secret.yaml
                 readOnly: true

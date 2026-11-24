@@ -1,0 +1,153 @@
+kind: Cluster
+name: dbnet
+kubernetes:
+  version: v1.37.2
+talos:
+  version: v1.14.5
+---
+kind: ControlPlane
+machines:
+  - cf40c5c3-c187-4c24-a48b-c165ee1860a2
+---
+kind: Workers
+machines:
+  - 0242c776-bc9d-42a7-9d7e-658dd7501c2b
+  - 8fa8ff36-9dca-45ed-a9dc-4cc0b676273d
+---
+kind: Machine
+name: 0242c776-bc9d-42a7-9d7e-658dd7501c2b
+patches:
+  - idOverride: 10-0242c776-bc9d-42a7-9d7e-658dd7501c2b
+    annotations:
+      description: Config patch imported from existing Talos node
+      name: User defined patch
+    inline: |
+      addresses:
+        - address: 10.0.0.43/24
+      apiVersion: v1alpha1
+      kind: LinkConfig
+      name: eth0
+      routes:
+        - gateway: 10.0.0.1
+      ---
+      apiVersion: v1alpha1
+      kind: UserVolumeConfig
+      name: openebs-data
+      provisioning:
+        diskSelector:
+          match: '"/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1" in disk.symlinks'
+        maxSize: "0"
+      ---
+      cluster:
+        controlPlane: {}
+        extraManifests:
+          - https://github.com/fluxcd/flux2/releases/latest/download/install.yaml
+        network:
+          cni:
+            name: none
+        proxy:
+          disabled: true
+      machine:
+        install: {}
+        network:
+          nameservers:
+            - 10.0.0.22
+            - 10.0.0.5
+      version: v1alpha1
+      ---
+      apiVersion: v1alpha1
+      auto: "off"
+      hostname: talos-wk-2
+      kind: HostnameConfig
+---
+kind: Machine
+name: 8fa8ff36-9dca-45ed-a9dc-4cc0b676273d
+patches:
+  - idOverride: 10-8fa8ff36-9dca-45ed-a9dc-4cc0b676273d
+    annotations:
+      description: Config patch imported from existing Talos node
+      name: User defined patch
+    inline: |
+      addresses:
+        - address: 10.0.0.42/24
+      apiVersion: v1alpha1
+      kind: LinkConfig
+      name: eth0
+      routes:
+        - gateway: 10.0.0.1
+      ---
+      apiVersion: v1alpha1
+      kind: UserVolumeConfig
+      name: openebs-data
+      provisioning:
+        diskSelector:
+          match: '"/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1" in disk.symlinks'
+        maxSize: "0"
+      ---
+      cluster:
+        controlPlane: {}
+        extraManifests:
+          - https://github.com/fluxcd/flux2/releases/latest/download/install.yaml
+        network:
+          cni:
+            name: none
+        proxy:
+          disabled: true
+      machine:
+        install: {}
+        kernel:
+          modules:
+            - name: nvidia
+            - name: nvidia_uvm
+            - name: nvidia_drm
+            - name: nvidia_modeset
+        network:
+          nameservers:
+            - 10.0.0.22
+            - 10.0.0.5
+        nodeLabels:
+          nvidia.com/gpu.present: "true"
+      version: v1alpha1
+      ---
+      apiVersion: v1alpha1
+      auto: "off"
+      hostname: talos-wk-1
+      kind: HostnameConfig
+---
+kind: Machine
+name: cf40c5c3-c187-4c24-a48b-c165ee1860a2
+patches:
+  - idOverride: 10-cf40c5c3-c187-4c24-a48b-c165ee1860a2
+    annotations:
+      description: Config patch imported from existing Talos node
+      name: User defined patch
+    inline: |
+      addresses:
+        - address: 10.0.0.41/24
+      apiVersion: v1alpha1
+      kind: LinkConfig
+      name: eth0
+      routes:
+        - gateway: 10.0.0.1
+      ---
+      cluster:
+        controlPlane: {}
+        extraManifests:
+          - https://github.com/fluxcd/flux2/releases/latest/download/install.yaml
+        network:
+          cni:
+            name: none
+        proxy:
+          disabled: true
+      machine:
+        install: {}
+        network:
+          nameservers:
+            - 10.0.0.22
+            - 10.0.0.5
+      version: v1alpha1
+      ---
+      apiVersion: v1alpha1
+      auto: "off"
+      hostname: talos-cp-1
+      kind: HostnameConfig
